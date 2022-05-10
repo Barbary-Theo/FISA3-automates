@@ -1,5 +1,9 @@
 import model.Reseau;
 import model.Station;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -15,8 +19,37 @@ public class Main {
     public static void main(String[] args) throws IOException, ParseException {
         System.out.println(" --------------------- START --------------------- ");
 
-        Reseau reseau = Reseau.getInstance();
-        readJSON("src/main/resources/bus.json", reseau);
+        //Reseau reseau = Reseau.getInstance();
+        // readJSON("src/main/resources/bus.json", reseau);
+        checkTextFile(new File("/Users/martinthibaut/Desktop/metro.txt"));
+
+    }
+
+    static void checkTextFile(File file){
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
+
+            String line;
+            int lineNumber = 1;
+            while ((line = bufferedReader.readLine()) != null){
+                if (lineNumber == 1 && !line.startsWith("%")){
+                    String error = "The first line must be begin with a %. (Line " + lineNumber + " in " + file.getName() + ")";
+                    throw new Exception(error);
+                }
+
+                if (line.startsWith("%") && line.contains("stations")) {
+                    String temp = bufferedReader.readLine();
+                    String[] stations = temp.split(" ");
+                    Arrays.stream(stations).map(station -> {
+                        Reseau reseau = Reseau.getInstance();
+                        return null;
+                    });
+                }
+                lineNumber++;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 

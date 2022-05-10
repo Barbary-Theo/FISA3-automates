@@ -8,13 +8,15 @@ public class Liaison {
     private String name;
     private Date heureArrive;
     private Date heureDepart;
+    private int duree;
     private List<Exploitant> allTypes;
     private Station stationDepart;
     private Station stationDestination;
 
-    public Liaison(Date heureArrive, Date heureDepart, List<Exploitant> allTypes, Station stationDepart, Station stationDestination) {
+    public Liaison(Date heureArrive, Date heureDepart, int duree, List<Exploitant> allTypes, Station stationDepart, Station stationDestination) {
         this.heureArrive = heureArrive;
         this.heureDepart = heureDepart;
+        this.duree = duree;
         this.allTypes = allTypes;
         this.stationDepart = stationDepart;
         this.stationDestination = stationDestination;
@@ -79,5 +81,14 @@ public class Liaison {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getDuree() {
+        return duree;
+    }
+
+    public void setDuree(int duree) {
+        this.duree = duree;
+
     }
 }
