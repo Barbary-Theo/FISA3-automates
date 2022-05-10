@@ -5,6 +5,7 @@ import java.util.List;
 
 public class Liaison {
 
+    private String name;
     private Date heureArrive;
     private Date heureDepart;
     private List<Exploitant> allTypes;
@@ -12,6 +13,15 @@ public class Liaison {
     private Station stationDestination;
 
     public Liaison(Date heureArrive, Date heureDepart, List<Exploitant> allTypes, Station stationDepart, Station stationDestination) {
+        this.heureArrive = heureArrive;
+        this.heureDepart = heureDepart;
+        this.allTypes = allTypes;
+        this.stationDepart = stationDepart;
+        this.stationDestination = stationDestination;
+    }
+
+    public Liaison(String name, Date heureArrive, Date heureDepart, List<Exploitant> allTypes, Station stationDepart, Station stationDestination) {
+        this.name = name;
         this.heureArrive = heureArrive;
         this.heureDepart = heureDepart;
         this.allTypes = allTypes;
@@ -61,5 +71,13 @@ public class Liaison {
 
     public void setStationDestination(Station stationDestination) {
         this.stationDestination = stationDestination;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
