@@ -9,8 +9,9 @@
                 {"station": "Piscine"},
                 {"station": "Parc"},
                 {"station": "Ecole"},
-                {"station": "Mairie"}
-            ], 
+                {"station": "Mairie"},
+                {"station": "cezefe"}
+            ],
         "passages" :
             [
                 ["0720","0729","0736","0743","0746"],

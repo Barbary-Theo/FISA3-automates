@@ -1,5 +1,6 @@
 import model.Reseau;
 import model.Station;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,20 +20,20 @@ public class Main {
     public static void main(String[] args) throws IOException, ParseException {
         System.out.println(" --------------------- START --------------------- ");
 
-        //Reseau reseau = Reseau.getInstance();
-        // readJSON("src/main/resources/bus.json", reseau);
-        checkTextFile(new File("/Users/martinthibaut/Desktop/metro.txt"));
+        Reseau reseau = Reseau.getInstance();
+        readJSON("src/main/resources/bus.json", reseau);
+        //checkTextFile(new File("/Users/martinthibaut/Desktop/metro.txt"));
 
     }
 
-    static void checkTextFile(File file){
+    static void checkTextFile(File file) {
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
 
             String line;
             int lineNumber = 1;
-            while ((line = bufferedReader.readLine()) != null){
-                if (lineNumber == 1 && !line.startsWith("%")){
+            while ((line = bufferedReader.readLine()) != null) {
+                if (lineNumber == 1 && !line.startsWith("%")) {
                     String error = "The first line must be begin with a %. (Line " + lineNumber + " in " + file.getName() + ")";
                     throw new Exception(error);
                 }
@@ -53,7 +54,6 @@ public class Main {
     }
 
 
-
     public static void readJSON(String filePath, Reseau reseau) throws IOException, ParseException {
 
         try {
@@ -66,21 +66,25 @@ public class Main {
 
             JSONArray horaires = (JSONArray) jsonObject.get("horaires");
 
-            for(Object horaire : horaires) {
+            for (Object horaire : horaires) {
                 horaireParsed = (JSONObject) horaire;
                 stations = (JSONArray) horaireParsed.get("stations");
 
-                for(Object station : stations) {
+                for (Object station : stations) {
                     stationParsed = (JSONObject) station;
 
-                    System.out.println(stationParsed.get("station"));
+                    if (!reseau.verifStationExist(stationParsed.get("station").toString())) {
+                        throw new Exception("Station does not exist : " + stationParsed.get("station").toString());
+                    }
+
                 }
 
             }
 
-        }
-        catch (IOException | ParseException e) {
+        } catch (IOException | ParseException e) {
             System.err.println("Error while reading file : " + e);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
     }

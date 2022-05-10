@@ -73,6 +73,17 @@ public class Reseau {
         Parc.addVoisin(Gare);
         Parc.addVoisin(Piscine);
 
+        stations.add(Parc);
+        stations.add(Piscine);
+        stations.add(Gare);
+        stations.add(Ecole);
+        stations.add(Limo);
+        stations.add(Singha);
+        stations.add(Neuville);
+        stations.add(Mairie);
+        stations.add(Syen);
+        stations.add(Avlon);
+        stations.add(Arly);
     }
 
     public static Reseau getInstance() {
