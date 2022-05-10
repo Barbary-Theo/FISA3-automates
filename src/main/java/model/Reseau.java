@@ -9,7 +9,71 @@ public class Reseau {
     private List<Liaison> liaisons = new ArrayList<>();
     private List<Station> stations = new ArrayList<>();
 
-    private Reseau() { }
+    private Reseau() {
+        Station Limo = new Station("Limo", new ArrayList<>());
+        Station Arly = new Station("Arly",  new ArrayList<>());
+        Station Singha = new Station("Singha",  new ArrayList<>());
+        Station Neuville = new Station("Neuville",  new ArrayList<>());
+        Station Syen = new Station("Syen",  new ArrayList<>());
+        Station Gare = new Station("Gare",  new ArrayList<>());
+        Station Avlon = new Station("Avlon",  new ArrayList<>());
+        Station Mairie = new Station("Mairie",  new ArrayList<>());
+        Station Piscine = new Station("Piscine",  new ArrayList<>());
+        Station Ecole = new Station("Ecole",  new ArrayList<>());
+        Station Parc = new Station("Parc",  new ArrayList<>());
+
+        Limo.addVoisin(Arly);
+        Limo.addVoisin(Syen);
+
+        Arly.addVoisin(Limo);
+        Arly.addVoisin(Singha);
+        Arly.addVoisin(Syen);
+
+        Singha.addVoisin(Arly);
+        Singha.addVoisin(Syen);
+        Singha.addVoisin(Gare);
+        Singha.addVoisin(Avlon);
+        Singha.addVoisin(Neuville);
+
+        Neuville.addVoisin(Singha);
+        Neuville.addVoisin(Gare);
+        Neuville.addVoisin(Avlon);
+
+        Syen.addVoisin(Limo);
+        Syen.addVoisin(Arly);
+        Syen.addVoisin(Singha);
+        Syen.addVoisin(Gare);
+        Syen.addVoisin(Mairie);
+        Syen.addVoisin(Ecole);
+        Syen.addVoisin(Piscine);
+
+        Gare.addVoisin(Syen);
+        Gare.addVoisin(Singha);
+        Gare.addVoisin(Neuville);
+        Gare.addVoisin(Avlon);
+        Gare.addVoisin(Piscine);
+        Gare.addVoisin(Parc);
+        Gare.addVoisin(Ecole);
+
+        Avlon.addVoisin(Neuville);
+        Avlon.addVoisin(Gare);
+        Avlon.addVoisin(Singha);
+        Avlon.addVoisin(Piscine);
+
+        Mairie.addVoisin(Syen);
+        Mairie.addVoisin(Ecole);
+
+        Ecole.addVoisin(Mairie);
+        Ecole.addVoisin(Syen);
+        Ecole.addVoisin(Gare);
+        Ecole.addVoisin(Piscine);
+        Ecole.addVoisin(Parc);
+
+        Parc.addVoisin(Ecole);
+        Parc.addVoisin(Gare);
+        Parc.addVoisin(Piscine);
+
+    }
 
     public static Reseau getInstance() {
         if(singleton == null) {
@@ -42,5 +106,9 @@ public class Reseau {
 
     public void setStations(List<Station> stations) {
         this.stations = stations;
+    }
+
+    public boolean verifStationExist(String stationName) {
+        return stations.stream().anyMatch(station -> station.getName().equals(stationName));
     }
 }
