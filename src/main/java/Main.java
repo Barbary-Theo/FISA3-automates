@@ -69,14 +69,19 @@ public class Main {
 
             horaires = (JSONArray) jsonObject.get("horaires");
 
-            for (Object horaire : horaires) {
-                horaireParsed = (JSONObject) horaire;
+            if(horaires != null) {
+                for (Object horaire : horaires) {
+                    horaireParsed = (JSONObject) horaire;
 
-                getStationByHoraires(reseau, horaireParsed, allStation);
+                    getStationByHoraires(reseau, horaireParsed, allStation);
 
-                updateAddLiaison(reseau, horaireParsed, allStation);
+                    updateAddLiaison(reseau, horaireParsed, allStation);
 
-                allStation.clear();
+                    allStation.clear();
+                }
+            }
+            else {
+                BaliseException("horaires", jsonObject);
             }
 
         } catch (IOException | ParseException e) {
@@ -91,65 +96,91 @@ public class Main {
     public static void getStationByHoraires(Reseau reseau, JSONObject horaireParsed, List<Station> allStation) throws Exception {
 
         JSONArray stations = (JSONArray) horaireParsed.get("stations");
-        JSONObject stationParsed;
 
-        for (Object station : stations) {
-            stationParsed = (JSONObject) station;
+        if(stations != null) {
+            JSONObject stationParsed;
 
-            if (!reseau.verifStationExist(stationParsed.get("station").toString())) {
-                try {
-                    throw new Exception("Unknown station -> Station does not exist : " + stationParsed.get("station").toString());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Thread.currentThread().interrupt();
+            for (Object station : stations) {
+                stationParsed = (JSONObject) station;
+
+                if(stationParsed.get("station") != null) {
+                    if (!reseau.verifStationExist(stationParsed.get("station").toString())) {
+                        try {
+                            throw new Exception("Unknown station -> Station does not exist : " + stationParsed.get("station").toString());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                    else {
+                        allStation.add(reseau.findStationByName(stationParsed.get("station").toString()));
+                    }
                 }
-            }
-            else {
-                allStation.add(reseau.findStationByName(stationParsed.get("station").toString()));
-            }
+                else {
+                    BaliseException("station", stationParsed);
+                }
 
+            }
         }
+        else {
+            BaliseException("stations", horaireParsed);
+        }
+
 
     }
 
     public static void updateAddLiaison(Reseau reseau, JSONObject horaireParsed, List<Station> allStation) throws Exception {
 
         JSONArray passages = (JSONArray) horaireParsed.get("passages");
-        JSONArray passageParsed;
 
-        for (Object passage : passages) {
-            passageParsed = (JSONArray) passage;
+        if(passages != null) {
+            JSONArray passageParsed;
 
-            if(allStation.size() != passageParsed.size()) {
-                try {
-                    throw new Exception("Not  the same number of data between station name and time indications -> There are " + allStation.size() + " station(s) whereas there are " + passageParsed.size() + " time indication(s) in " + passageParsed.toString());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Thread.currentThread().interrupt();
+            for (Object passage : passages) {
+                passageParsed = (JSONArray) passage;
+
+                if(allStation.size() != passageParsed.size()) {
+                    try {
+                        throw new Exception("Not  the same number of data between station name and time indications -> There are " + allStation.size() + " station(s) whereas there are " + passageParsed.size() + " time indication(s) in " + passageParsed.toString());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Thread.currentThread().interrupt();
+                    }
                 }
+
+                for (int j = 0; j < passageParsed.size() - 1; j++) {
+
+                    //System.out.println(allStation.get(j).getName() + " TO " + allStation.get(j + 1).getName() + " : " + passageParsed.get(j).toString() + " - " + passageParsed.get(j + 1).toString());
+
+                    int duree = Integer.parseInt(passageParsed.get(j + 1).toString()) - Integer.parseInt(passageParsed.get(j).toString());
+                    reseau.addLiaison(
+                            new Liaison(
+                                    "A", // name
+                                    passageParsed.get(j + 1).toString(),
+                                    passageParsed.get(j).toString(),
+                                    duree,
+                                    new Exploitant("Bus"),
+                                    allStation.get(j),
+                                    allStation.get(j + 1)
+                            )
+                    );
+                }
+                //System.out.println();
+
             }
-
-            for (int j = 0; j < passageParsed.size() - 1; j++) {
-
-                //System.out.println(allStation.get(j).getName() + " TO " + allStation.get(j + 1).getName() + " : " + passageParsed.get(j).toString() + " - " + passageParsed.get(j + 1).toString());
-
-                int duree = Integer.parseInt(passageParsed.get(j + 1).toString()) - Integer.parseInt(passageParsed.get(j).toString());
-                reseau.addLiaison(
-                        new Liaison(
-                                "A", // name
-                                passageParsed.get(j + 1).toString(),
-                                passageParsed.get(j).toString(),
-                                duree,
-                                new Exploitant("Bus"),
-                                allStation.get(j),
-                                allStation.get(j + 1)
-                        )
-                );
-            }
-            //System.out.println();
-
+        }
+        else {
+            BaliseException("passages", horaireParsed);
         }
 
+    }
+
+    public static void BaliseException(String baliseName, JSONObject json) {
+        try {
+            throw new Exception("Balise not found -> Balise " + baliseName + "  not found in " + json.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
