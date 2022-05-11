@@ -1,3 +1,5 @@
+import model.Exploitant;
+import model.Liaison;
 import model.Reseau;
 import model.Station;
 
@@ -14,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
 
@@ -60,15 +63,25 @@ public class Main {
             FileReader fileReader = new FileReader(filePath);
             JSONParser jsonParser = new JSONParser();
             JSONObject jsonObject = (JSONObject) jsonParser.parse(fileReader);
+
             JSONObject horaireParsed;
             JSONObject stationParsed;
-            JSONArray stations;
+            JSONArray passageParsed;
 
-            JSONArray horaires = (JSONArray) jsonObject.get("horaires");
+            JSONArray horaires;
+            JSONArray stations;
+            JSONArray passages;
+
+            List<Station> allStation = new ArrayList<>();
+
+            horaires = (JSONArray) jsonObject.get("horaires");
 
             for (Object horaire : horaires) {
                 horaireParsed = (JSONObject) horaire;
+
                 stations = (JSONArray) horaireParsed.get("stations");
+                passages = (JSONArray) horaireParsed.get("passages");
+
 
                 for (Object station : stations) {
                     stationParsed = (JSONObject) station;
@@ -76,9 +89,37 @@ public class Main {
                     if (!reseau.verifStationExist(stationParsed.get("station").toString())) {
                         throw new Exception("Station does not exist : " + stationParsed.get("station").toString());
                     }
+                    else {
+                        allStation.add(reseau.findStationByName(stationParsed.get("station").toString()));
+                    }
 
                 }
 
+                for (Object passage : passages) {
+                    passageParsed = (JSONArray) passage;
+
+                    for (int j = 0; j < passageParsed.size() - 1; j++) {
+
+
+
+                        int duree = Integer.parseInt(passageParsed.get(j + 1).toString()) - Integer.parseInt(passageParsed.get(j).toString());
+                        reseau.addLiaison(
+                                new Liaison(
+                                    "A", // name
+                                    passageParsed.get(j + 1).toString(),
+                                    passageParsed.get(j).toString(),
+                                    duree,
+                                    new Exploitant("Bus"),
+                                    allStation.get(j),
+                                    allStation.get(j + 1)
+                                )
+                        );
+                    }
+                    System.out.println();
+
+                }
+
+                allStation.clear();
             }
 
         } catch (IOException | ParseException e) {

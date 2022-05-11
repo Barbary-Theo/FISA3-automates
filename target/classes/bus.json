@@ -9,8 +9,7 @@
                 {"station": "Piscine"},
                 {"station": "Parc"},
                 {"station": "Ecole"},
-                {"station": "Mairie"},
-                {"station": "cezefe"}
+                {"station": "Mairie"}
             ],
         "passages" :
             [

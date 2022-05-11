@@ -122,4 +122,15 @@ public class Reseau {
     public boolean verifStationExist(String stationName) {
         return stations.stream().anyMatch(station -> station.getName().equals(stationName));
     }
+
+    public Station findStationByName(String stationName) {
+
+        for(Station station : stations) {
+            if(station.getName().equals(stationName)) {
+                return station;
+            }
+        }
+
+        return null;
+    }
 }
