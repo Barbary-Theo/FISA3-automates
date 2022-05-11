@@ -81,7 +81,7 @@ public class Main {
                 }
             }
             else {
-                BaliseException("horaires", jsonObject);
+                TagException("horaires", jsonObject);
             }
 
         } catch (IOException | ParseException e) {
@@ -117,13 +117,13 @@ public class Main {
                     }
                 }
                 else {
-                    BaliseException("station", stationParsed);
+                    TagException("station", stationParsed);
                 }
 
             }
         }
         else {
-            BaliseException("stations", horaireParsed);
+            TagException("stations", horaireParsed);
         }
 
 
@@ -170,14 +170,14 @@ public class Main {
             }
         }
         else {
-            BaliseException("passages", horaireParsed);
+            TagException("passages", horaireParsed);
         }
 
     }
 
-    public static void BaliseException(String baliseName, JSONObject json) {
+    public static void TagException(String baliseName, JSONObject json) {
         try {
-            throw new Exception("Balise not found -> Balise " + baliseName + "  not found in " + json.toString());
+            throw new Exception("Tag not found -> Tag " + baliseName + "  not found in " + json.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }
