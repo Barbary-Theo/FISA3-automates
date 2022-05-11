@@ -19,7 +19,7 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) throws IOException, ParseException {
-        System.out.println(" --------------------- START --------------------- ");
+        System.out.println(" \n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ");
 
         Reseau reseau = Reseau.getInstance();
         readJSON("src/main/resources/bus.json", reseau);
@@ -80,7 +80,7 @@ public class Main {
             }
 
         } catch (IOException | ParseException e) {
-            System.err.println("Error while reading file : " + e);
+            System.err.println("Error syntax in json file : " + e);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -98,9 +98,10 @@ public class Main {
 
             if (!reseau.verifStationExist(stationParsed.get("station").toString())) {
                 try {
-                    throw new Exception("Station does not exist : " + stationParsed.get("station").toString());
+                    throw new Exception("Unknown station -> Station does not exist : " + stationParsed.get("station").toString());
                 } catch (Exception e) {
                     e.printStackTrace();
+                    Thread.currentThread().interrupt();
                 }
             }
             else {
@@ -111,7 +112,7 @@ public class Main {
 
     }
 
-    public static void updateAddLiaison(Reseau reseau, JSONObject horaireParsed, List<Station> allStation) {
+    public static void updateAddLiaison(Reseau reseau, JSONObject horaireParsed, List<Station> allStation) throws Exception {
 
         JSONArray passages = (JSONArray) horaireParsed.get("passages");
         JSONArray passageParsed;
@@ -119,9 +120,18 @@ public class Main {
         for (Object passage : passages) {
             passageParsed = (JSONArray) passage;
 
+            if(allStation.size() != passageParsed.size()) {
+                try {
+                    throw new Exception("Not  the same number of data between station name and time indications -> There are " + allStation.size() + " station(s) whereas there are " + passageParsed.size() + " time indication(s) in " + passageParsed.toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Thread.currentThread().interrupt();
+                }
+            }
+
             for (int j = 0; j < passageParsed.size() - 1; j++) {
 
-
+                //System.out.println(allStation.get(j).getName() + " TO " + allStation.get(j + 1).getName() + " : " + passageParsed.get(j).toString() + " - " + passageParsed.get(j + 1).toString());
 
                 int duree = Integer.parseInt(passageParsed.get(j + 1).toString()) - Integer.parseInt(passageParsed.get(j).toString());
                 reseau.addLiaison(
@@ -136,7 +146,7 @@ public class Main {
                         )
                 );
             }
-            System.out.println();
+            //System.out.println();
 
         }
 
