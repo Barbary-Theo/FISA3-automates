@@ -139,4 +139,18 @@ public class Reseau {
 
         return null;
     }
+
+    @Override
+    public String toString() {
+        System.out.println();
+
+        String stationText = "Stations : [\n";
+        for(Station station : stations) {
+            stationText += "\t" + station.toString() + "\n";
+        }
+        stationText += "]";
+
+        return stationText;
+    }
+
 }

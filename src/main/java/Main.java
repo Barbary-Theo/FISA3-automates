@@ -92,8 +92,8 @@ public class Main {
                     }
 
                 }
-                System.out.println();
             }
+            System.out.println(reseau);
 
         } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
