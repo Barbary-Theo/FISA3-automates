@@ -10,7 +10,7 @@
                 {"station": "Parc"},
                 {"station": "Ecole"},
                 {"station": "Mairie"}
-            ], 
+            ],
         "passages" :
             [
                 ["0720","0729","0736","0743","0746"],

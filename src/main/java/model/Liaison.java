@@ -6,57 +6,64 @@ import java.util.List;
 public class Liaison {
 
     private String name;
-    private Date heureArrive;
-    private Date heureDepart;
+    private String heureArrive;
+    private String heureDepart;
     private int duree;
-    private List<Exploitant> allTypes;
+    private Exploitant type;
     private Station stationDepart;
     private Station stationDestination;
 
-    public Liaison(Date heureArrive, Date heureDepart, int duree, List<Exploitant> allTypes, Station stationDepart, Station stationDestination) {
+    public Liaison(String heureArrive, String heureDepart, int duree, Exploitant type, Station stationDepart, Station stationDestination) {
         this.heureArrive = heureArrive;
         this.heureDepart = heureDepart;
         this.duree = duree;
-        this.allTypes = allTypes;
+        this.type = type;
         this.stationDepart = stationDepart;
         this.stationDestination = stationDestination;
     }
 
-    public Liaison(String name, Date heureArrive, Date heureDepart, List<Exploitant> allTypes, Station stationDepart, Station stationDestination) {
+    public Liaison(String name, String heureArrive, String heureDepart, int duree, Exploitant type, Station stationDepart, Station stationDestination) {
         this.name = name;
         this.heureArrive = heureArrive;
         this.heureDepart = heureDepart;
-        this.allTypes = allTypes;
+        this.duree = duree;
+        this.type = type;
         this.stationDepart = stationDepart;
         this.stationDestination = stationDestination;
     }
 
-    public void addType(Exploitant type) {
-        allTypes.add(type);
+
+    public Liaison(String name, String heureArrive, String heureDepart, Exploitant type, Station stationDepart, Station stationDestination) {
+        this.name = name;
+        this.heureArrive = heureArrive;
+        this.heureDepart = heureDepart;
+        this.type = type;
+        this.stationDepart = stationDepart;
+        this.stationDestination = stationDestination;
     }
 
-    public Date getHeureArrive() {
+    public String getHeureArrive() {
         return heureArrive;
     }
 
-    public void setHeureArrive(Date heureArrive) {
+    public void setHeureArrive(String heureArrive) {
         this.heureArrive = heureArrive;
     }
 
-    public Date getHeureDepart() {
+    public String getHeureDepart() {
         return heureDepart;
     }
 
-    public void setHeureDepart(Date heureDepart) {
+    public void setHeureDepart(String heureDepart) {
         this.heureDepart = heureDepart;
     }
 
-    public List<Exploitant> getAllTypes() {
-        return allTypes;
+    public Exploitant getAllTypes() {
+        return type;
     }
 
-    public void setAllTypes(List<Exploitant> allTypes) {
-        this.allTypes = allTypes;
+    public void setAllTypes(Exploitant type) {
+        this.type = type;
     }
 
     public Station getStationDepart() {
