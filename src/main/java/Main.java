@@ -55,21 +55,34 @@ public class Main {
             doc.getDocumentElement().normalize();
             NodeList list = doc.getElementsByTagName("line");
 
-            for(int temp = 0 ; temp < list.getLength() ; temp ++) {
+            if(list != null) {
 
-                Node node = list.item(temp);
-                NodeList junctions = node.getChildNodes();
-                String lineName = node.getFirstChild().getNodeValue().replaceAll(" ", "").replaceAll("\n", "");
+                for(int temp = 0 ; temp < list.getLength() ; temp ++) {
 
-                for(int tempJunction = 0 ; tempJunction < junctions.getLength() ; tempJunction ++) {
+                    Node node = list.item(temp);
+                    NodeList junctions = node.getChildNodes();
+                    String lineName = node.getFirstChild().getNodeValue().replaceAll(" ", "").replaceAll("\n", "");
 
-                    Node nodeJunction = junctions.item(tempJunction);
+                    for(int tempJunction = 0 ; tempJunction < junctions.getLength() ; tempJunction ++) {
 
-                    addLiaison(reseau, nodeJunction, lineName);
+                        Node nodeJunction = junctions.item(tempJunction);
+
+                        addLiaison(reseau, nodeJunction, lineName);
 
 
+                    }
                 }
+
             }
+            else {
+                try {
+                    throw new Exception("Tag exception -> tag line does not existe");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                // error balise
+            }
+
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,26 +96,36 @@ public class Main {
 
             Element element = (Element) nodeJunction;
 
-            String startStation = element.getElementsByTagName("start-station").item(0).getTextContent();
-            String endStation = element.getElementsByTagName("arrival-station").item(0).getTextContent();
-            String startHour = element.getElementsByTagName("start-hour").item(0).getTextContent();
-            String endHour = element.getElementsByTagName("arrival-hour").item(0).getTextContent();
-            int duree = getDureeByHour(startHour, endHour);
-            Station stationDepart = reseau.findStationByName(startStation);
-            Station stationEnd = reseau.findStationByName(endStation);
+            Node startStation = element.getElementsByTagName("start-station").item(0);
+            Node endStation = element.getElementsByTagName("arrival-station").item(0);
+            Node startHour = element.getElementsByTagName("start-hour").item(0);
+            Node endHour = element.getElementsByTagName("arrival-hour").item(0);
 
-            if(reseau.verifStationExist(startStation) && reseau.verifStationExist(endStation)) {
-                reseau.addLiaison(
-                        new Liaison(
-                                lineName,
-                                endHour,
-                                startHour,
-                                duree,
-                                new Exploitant("Train"),
-                                stationDepart,
-                                stationEnd
-                        )
-                );
+            if(startStation == null || endStation == null || startHour == null || endHour == null) {
+                try {
+                    throw new Exception("Tag exception -> a tag 'start-station' or 'arrival-station' or 'start-hour' or 'arrival-hour' is not present in tag junction");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            else {
+                int duree = getDureeByHour(startHour.getTextContent(), endHour.getTextContent());
+                Station stationDepart = reseau.findStationByName(startStation.getTextContent());
+                Station stationEnd = reseau.findStationByName(endStation.getTextContent());
+
+                if(reseau.verifStationExist(startStation.getTextContent()) && reseau.verifStationExist(endStation.getTextContent())) {
+                    reseau.addLiaison(
+                            new Liaison(
+                                    lineName,
+                                    endHour.getTextContent(),
+                                    startHour.getTextContent(),
+                                    duree,
+                                    new Exploitant("Train"),
+                                    stationDepart,
+                                    stationEnd
+                            )
+                    );
+                }
             }
 
         }
