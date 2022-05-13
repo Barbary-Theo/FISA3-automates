@@ -24,7 +24,6 @@ public class Main {
         Reseau reseau = Reseau.getInstance();
         readJSON("src/main/resources/bus.json", reseau);
         //checkTextFile(new File("/Users/martinthibaut/Desktop/metro.txt"));
-
     }
 
     static void checkTextFile(File file) {
@@ -40,12 +39,22 @@ public class Main {
                 }
 
                 if (line.startsWith("%") && line.contains("stations")) {
+                    System.out.println("je suis la");
                     String temp = bufferedReader.readLine();
+                    lineNumber++;
                     String[] stations = temp.split(" ");
-                    Arrays.stream(stations).map(station -> {
+                    int finalLineNumber = lineNumber;
+                    for (String station: stations) {
                         Reseau reseau = Reseau.getInstance();
-                        return null;
-                    });
+                        if (!reseau.verifStationExist(station)){
+                            String error = "The station \"" + station + "\" doesn't exist. (Line " + finalLineNumber + " in " + file.getName() + ")";
+                            try {
+                                throw new Exception(error);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    };
                 }
                 lineNumber++;
             }
