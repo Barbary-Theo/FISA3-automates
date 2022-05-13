@@ -101,7 +101,13 @@ public class Liaison {
 
     @Override
     public String toString() {
-        return "-> line " + name + " : from " + stationDepart.getName() + " at " + heureDepart + " to " + stationDestination.getName() + " at " + heureArrive + ", in " + type.getType() + " during " + duree;
+        return "-> line " + name + " : from " + stationDepart.getName() + " at " + formatHour(heureDepart) + " to " + stationDestination.getName() + " at " + formatHour(heureArrive) + ", in " + type.getType() + " during " + duree + " minutes";
+    }
+
+    public String formatHour(String horaire) {
+        String infos = "";
+        infos = horaire.charAt(0) + "" + horaire.charAt(1) + "h" + horaire.charAt(2) + "" + horaire.charAt(3);
+        return infos;
     }
 
 }

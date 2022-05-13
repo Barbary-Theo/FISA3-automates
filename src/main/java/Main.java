@@ -34,9 +34,11 @@ public class Main {
         System.out.println(" \n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ");
 
         Reseau reseau = Reseau.getInstance();
-        //readJSON("src/main/resources/bus.json", reseau);
+        readJSON("src/main/resources/bus.json", reseau);
         //checkTextFile(new File("/Users/martinthibaut/Desktop/metro.txt"));
         readTrainXML("src/main/resources/train.xml", reseau);
+
+        System.out.println(reseau);
 
     }
 
@@ -53,52 +55,80 @@ public class Main {
             doc.getDocumentElement().normalize();
             NodeList list = doc.getElementsByTagName("line");
 
-            for(int temp = 0 ; temp < list.getLength() ; temp ++) {
+            if(list != null) {
 
-                Node node = list.item(temp);
-                NodeList junctions = node.getChildNodes();
-                String lineName = node.getFirstChild().getNodeValue().replaceAll(" ", "").replaceAll("\n", "");
+                for(int temp = 0 ; temp < list.getLength() ; temp ++) {
 
-                for(int tempJunction = 0 ; tempJunction < junctions.getLength() ; tempJunction ++) {
+                    Node node = list.item(temp);
+                    NodeList junctions = node.getChildNodes();
+                    String lineName = node.getFirstChild().getNodeValue().replaceAll(" ", "").replaceAll("\n", "");
 
-                    Node nodeJunction = junctions.item(tempJunction);
+                    for(int tempJunction = 0 ; tempJunction < junctions.getLength() ; tempJunction ++) {
 
-                    if (nodeJunction.getNodeType() == Node.ELEMENT_NODE) {
+                        Node nodeJunction = junctions.item(tempJunction);
 
-                        Element element = (Element) nodeJunction;
+                        addLiaison(reseau, nodeJunction, lineName);
 
-                        String startStation = element.getElementsByTagName("start-station").item(0).getTextContent();
-                        String endStation = element.getElementsByTagName("arrival-station").item(0).getTextContent();
-                        String startHour = element.getElementsByTagName("start-hour").item(0).getTextContent();
-                        String endHour = element.getElementsByTagName("arrival-hour").item(0).getTextContent();
-                        int duree = Integer.parseInt(startHour.toString()) - Integer.parseInt(startHour.toString());
-
-                        //System.out.println("from " + int duree = Integer.parseInt(passageParsed.get(j + 1).toString()) - Integer.parseInt(passageParsed.get(j).toString());
-
-                        if(reseau.verifStationExist(startStation) && reseau.verifStationExist(endStation)) {
-                            reseau.addLiaison(
-                                new Liaison(
-                                    lineName,
-                                    startHour,
-                                    endHour,
-                                    duree,
-                                    new Exploitant("Train"),
-                                    reseau.findStationByName(startStation),
-                                    reseau.findStationByName(endStation)
-                                )
-                            );
-                        }
 
                     }
-
                 }
-            }
-            System.out.println(reseau);
 
-        } catch (ParserConfigurationException | SAXException | IOException e) {
+            }
+            else {
+                try {
+                    throw new Exception("Tag exception -> tag line does not existe");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                // error balise
+            }
+
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
+    }
+
+    public static void addLiaison(Reseau reseau, Node nodeJunction, String lineName) throws Exception {
+
+        if (nodeJunction.getNodeType() == Node.ELEMENT_NODE) {
+
+            Element element = (Element) nodeJunction;
+
+            Node startStation = element.getElementsByTagName("start-station").item(0);
+            Node endStation = element.getElementsByTagName("arrival-station").item(0);
+            Node startHour = element.getElementsByTagName("start-hour").item(0);
+            Node endHour = element.getElementsByTagName("arrival-hour").item(0);
+
+            if(startStation == null || endStation == null || startHour == null || endHour == null) {
+                try {
+                    throw new Exception("Tag exception -> a tag 'start-station' or 'arrival-station' or 'start-hour' or 'arrival-hour' is not present in tag junction");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            else {
+                int duree = getDureeByHour(startHour.getTextContent(), endHour.getTextContent());
+                Station stationDepart = reseau.findStationByName(startStation.getTextContent());
+                Station stationEnd = reseau.findStationByName(endStation.getTextContent());
+
+                if(reseau.verifStationExist(startStation.getTextContent()) && reseau.verifStationExist(endStation.getTextContent())) {
+                    reseau.addLiaison(
+                            new Liaison(
+                                    lineName,
+                                    endHour.getTextContent(),
+                                    startHour.getTextContent(),
+                                    duree,
+                                    new Exploitant("Train"),
+                                    stationDepart,
+                                    stationEnd
+                            )
+                    );
+                }
+            }
+
+        }
     }
 
 
@@ -220,9 +250,7 @@ public class Main {
 
                 for (int j = 0; j < passageParsed.size() - 1; j++) {
 
-                    //System.out.println(allStation.get(j).getName() + " TO " + allStation.get(j + 1).getName() + " : " + passageParsed.get(j).toString() + " - " + passageParsed.get(j + 1).toString());
-
-                    int duree = Integer.parseInt(passageParsed.get(j + 1).toString()) - Integer.parseInt(passageParsed.get(j).toString());
+                    int duree = getDureeByHour(passageParsed.get(j).toString(), passageParsed.get(j + 1).toString());
                     reseau.addLiaison(
                             new Liaison(
                                     "A", // name
@@ -235,7 +263,6 @@ public class Main {
                             )
                     );
                 }
-                //System.out.println();
 
             }
         } else {
@@ -252,4 +279,27 @@ public class Main {
         }
     }
 
+    public static int getDureeByHour(String start, String end) throws Exception {
+
+        if(start != null && end != null && start.length() == 4 && end.length() == 4) {
+
+            int duree = Integer.parseInt(end.toString()) - Integer.parseInt(start.toString());
+
+            if(start.charAt(1) != end.charAt(1)) {
+                duree -= 40;
+            }
+            return duree;
+        }
+        else {
+            try {
+                throw new Exception("Horaire Format exception -> horaire must contains 4 characters, in " + start + " or " + end);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return 0;
+        }
+
+    }
+
 }
+
