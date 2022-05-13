@@ -144,13 +144,19 @@ public class Reseau {
     public String toString() {
         System.out.println();
 
-        String stationText = "Stations : [\n";
+        String informations = "Stations : [\n";
         for(Station station : stations) {
-            stationText += "\t" + station.toString() + "\n";
+            informations += "\t" + station.toString() + "\n";
         }
-        stationText += "]";
+        informations += "]\n";
+        informations += "Liaisons : [\n";
 
-        return stationText;
+        for(Liaison liaison : liaisons) {
+            informations += "\t" + liaison.toString() + "\n";
+        }
+        informations += "]\n";
+
+        return informations;
     }
 
 }
