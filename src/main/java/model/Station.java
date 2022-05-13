@@ -32,4 +32,20 @@ public class Station {
     public void setVoisines(List<Station> voisines) {
         this.voisines = voisines;
     }
+
+    @Override
+    public String toString() {
+
+        String station = "-> '" + name + "', voisine [";
+
+        for(int i = 0 ; i < voisines.size() ; i ++) {
+            station += "" + voisines.get(i).getName();
+            if(i != voisines.size() - 1) {
+                station += ", ";
+            }
+        }
+
+        station += "]";
+        return station;
+    }
 }

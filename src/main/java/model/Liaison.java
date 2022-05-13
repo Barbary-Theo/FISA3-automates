@@ -98,4 +98,10 @@ public class Liaison {
         this.duree = duree;
 
     }
+
+    @Override
+    public String toString() {
+        return "-> line " + name + " : from " + stationDepart.getName() + " at " + heureDepart + " to " + stationDestination.getName() + " at " + heureArrive + ", in " + type.getType() + " during " + duree;
+    }
+
 }
