@@ -1,6 +1,6 @@
 % métro
 % stations
-Gare Avlon Syen Ecole Parc tamere
+Gare Avlon Syen Ecole Parc
 
 % liaisons A/R
 % depart arrivee duree

@@ -38,8 +38,8 @@ public class Main {
                     throw new Exception(error);
                 }
 
+                // Vérification des stations
                 if (line.startsWith("%") && line.contains("stations")) {
-                    System.out.println("je suis la");
                     String temp = bufferedReader.readLine();
                     lineNumber++;
                     String[] stations = temp.split(" ");
@@ -55,6 +55,10 @@ public class Main {
                             }
                         }
                     };
+                }
+
+                if (line.startsWith("%") && line.contains("liaisons")) {
+
                 }
                 lineNumber++;
             }
