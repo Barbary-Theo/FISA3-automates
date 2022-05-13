@@ -73,6 +73,12 @@ public class Reseau {
         Parc.addVoisin(Gare);
         Parc.addVoisin(Piscine);
 
+        Piscine.addVoisin(Avlon);
+        Piscine.addVoisin(Gare);
+        Piscine.addVoisin(Syen);
+        Piscine.addVoisin(Ecole);
+        Piscine.addVoisin(Parc);
+
         stations.add(Parc);
         stations.add(Piscine);
         stations.add(Gare);
