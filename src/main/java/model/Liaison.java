@@ -13,7 +13,7 @@ public class Liaison {
     private Station stationDepart;
     private Station stationDestination;
 
-    public Liaison(String heureArrive, String heureDepart, int duree, Exploitant type, Station stationDepart, Station stationDestination) {
+    public Liaison(String heureDepart, String heureArrive, int duree, Exploitant type, Station stationDepart, Station stationDestination) {
         this.heureArrive = heureArrive;
         this.heureDepart = heureDepart;
         this.duree = duree;
@@ -22,7 +22,7 @@ public class Liaison {
         this.stationDestination = stationDestination;
     }
 
-    public Liaison(String name, String heureArrive, String heureDepart, int duree, Exploitant type, Station stationDepart, Station stationDestination) {
+    public Liaison(String name, String heureDepart, String heureArrive, int duree, Exploitant type, Station stationDepart, Station stationDestination) {
         this.name = name;
         this.heureArrive = heureArrive;
         this.heureDepart = heureDepart;
@@ -33,7 +33,7 @@ public class Liaison {
     }
 
 
-    public Liaison(String name, String heureArrive, String heureDepart, Exploitant type, Station stationDepart, Station stationDestination) {
+    public Liaison(String name, String heureDepart, String heureArrive,  Exploitant type, Station stationDepart, Station stationDestination) {
         this.name = name;
         this.heureArrive = heureArrive;
         this.heureDepart = heureDepart;
@@ -97,5 +97,18 @@ public class Liaison {
     public void setDuree(int duree) {
         this.duree = duree;
 
+    }
+
+    @Override
+    public String toString() {
+        return "Liaison{" +
+                "name='" + name + '\'' +
+                ", heureDepart='" + heureDepart + '\'' +
+                ", heureArrive='" + heureArrive + '\'' +
+                ", duree=" + duree +
+                ", type=" + type.getType() +
+                ", stationDepart=" + stationDepart.getName() +
+                ", stationDestination=" + stationDestination.getName() +
+                '}';
     }
 }
