@@ -126,6 +126,13 @@ public class Main {
                             )
                     );
                 }
+                else {
+                    try {
+                        throw new Exception("Station name error -> station named " + startStation.getTextContent() + " or " + endStation.getTextContent() + " does not exist in th reseau");
+                    } catch (Exception e ) {
+                        e.printStackTrace();
+                    }
+                }
             }
 
         }
