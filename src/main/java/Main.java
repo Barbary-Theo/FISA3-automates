@@ -434,7 +434,7 @@ public class Main {
             return duree;
         }
         else {
-            throwException("Horaire Format exception -> horaire must contains 4 characters, in " + start + " or " + end);
+            throwException("Horaire format exception -> horaire must contains 4 characters, in " + start + " or " + end);
             return -1;
         }
 
