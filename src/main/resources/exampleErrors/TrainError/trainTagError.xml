@@ -2,7 +2,7 @@
 <horaires>
     <line>1
         <junction>
-            <start-statin>Limo</start-station>
+            <start-statin>Limo</start-statin>
             <arrival-station>Arly</arrival-station>
             <start-hour>0800</start-hour>
             <arrival-hour>0815</arrival-hour>
@@ -30,14 +30,14 @@
         <junction>
             <start-station>Arly</start-station>
             <arrival-station>Singha</arrival-station>
-            <star-hour>0815</start-hour>
+            <start-hour>0815</start-hour>
             <arrival-hour>0835</arrival-hour>
         </junction>
         <junction>
             <start-station>Singha</start-station>
             <arrival-station>Neuville</arrival-station>
             <start-hour>0838</start-hour>
-            <arrival-hur>0853</arrival-hour>
+            <arrival-hour>0853</arrival-hour>
         </junction>
         <junction>
             <start-station>Neuville</start-station>
@@ -93,7 +93,7 @@
             <start-station>Singha</start-station>
             <arrival-station>Gare</arrival-station>
             <start-hour>1642</start-hour>
-            <arrial-hour>1652</arrival-hour>
+            <arrival-hour>1652</arrival-hour>
         </junction>
         <junction>
             <start-station>Gare</start-station>
