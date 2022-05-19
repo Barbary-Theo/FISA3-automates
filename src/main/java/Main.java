@@ -36,12 +36,80 @@ public class Main {
         Reseau reseau = Reseau.getInstance();
         readJSON("src/main/resources/bus.json", reseau);
         //checkTextFile(new File("/Users/martinthibaut/Desktop/metro.txt"));
-        readTrainXML("src/main/resources/train.xml", reseau);
+        //readTrainXML("src/main/resources/train.xml", reseau);
+        //readTramXML("src/main/resources/tram.xml", reseau);
 
         System.out.println(reseau);
 
     }
 
+
+    private static void readTramXML(String fileName, Reseau reseau) {
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+
+        try {
+            dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = db.parse(new File(fileName));
+
+            doc.getDocumentElement().normalize();
+
+            NodeList list = doc.getElementsByTagName("ligne");
+
+            if(list != null) {
+                for(int temp = 0 ; temp < list.getLength() ; temp ++) {
+
+                    Node node = list.item(temp);
+                    String lineName = node.getFirstChild().getNodeValue().replaceAll(" ", "").replaceAll("\n", "");
+
+
+                    if (node.getNodeType() == Node.ELEMENT_NODE) {
+
+                        Element element = (Element) node;
+                        String[] stations = element.getElementsByTagName("stations").item(0).getTextContent().split(" ");
+                        NodeList line = ((Element) node).getChildNodes();
+
+                        for(int tempJunction = 0 ; tempJunction < line.getLength() ; tempJunction ++) {
+
+                            Node nodeJunction = line.item(tempJunction);
+
+                            if (nodeJunction.getNodeType() == Node.ELEMENT_NODE ) {
+
+                                //casse couilles mais obligé de faire que l'attribut stations doit être en first
+
+                                Node testttttt = nodeJunction.getChildNodes().item(0);
+                                String[] currentHoraires = testttttt.getTextContent().split(" ");
+
+                                for(int indexCurrentHoraires = 0 ; indexCurrentHoraires < currentHoraires.length ; indexCurrentHoraires++) {
+
+                                    System.out.println(stations[indexCurrentHoraires] + " " + currentHoraires[indexCurrentHoraires]);
+                                }
+
+
+                            }
+                            System.out.println();
+                        }
+                        System.out.println();
+
+                    }
+
+                }
+            }
+            else {
+                try {
+                    throw new Exception("Tag exception -> tag lignes does not existe");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
 
     private static void readTrainXML(String fileName, Reseau reseau) {
 
@@ -80,7 +148,6 @@ public class Main {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                // error balise
             }
 
 
