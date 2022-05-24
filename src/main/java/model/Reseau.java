@@ -177,9 +177,44 @@ public class Reseau {
     ~~~~~~~~~~~~~~> " Plus court chemin part "
     */
 
-    public static List<Liaison> getCourtChemin(String startStationName, String startHour, String endStationName, String endHour) {
+    public List<Liaison> getCourtChemin(String startStationName, String startHourNotParsed, String endStationName) {
 
+        if(parametersAreValid(startStationName, startHourNotParsed, endStationName)) {
+
+            try {
+                int startHour = Integer.parseInt(startHourNotParsed);
+
+
+
+                System.out.println(" -> correct parameters : Du bois, merci");
+                return new ArrayList<>();
+
+            } catch (Exception e) {
+                throwException("Error -> hour can not be parsed in Integer");
+                return new ArrayList<>();
+            }
+        }
+
+        System.err.println("Error parameters -> station does not exist or hour not correctly defined, hour need to be like '0810' for 08h10.");
         return new ArrayList<>();
+    }
+
+    public boolean parametersAreValid(String startStationName, String startHour, String endStationName) {
+
+        return singleton.verifStationExist(startStationName) &&
+                singleton.verifStationExist(endStationName) &&
+                startHour != null && startHour.length() == 4;
+
+    }
+
+
+
+    public void throwException(String exceptionComment) {
+        try {
+            throw new Exception(exceptionComment);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
