@@ -6,11 +6,11 @@ public class Reseau {
 
     private static Reseau singleton;
      /*
-     ~~~~~~~ Map < Nom de la station de départ , Liste des liaisons avec comme départ le nom de la station clé >
+     ~~~~~~~> Map < Nom de la station de départ , Liste des liaisons avec comme départ le nom de la station clé >
      */
     private Map<String, List<Liaison>> liaisons = new HashMap<>();
     /*
-    ~~~~~~~ Map < Nom de la station , Station correspondante à la clé >
+    ~~~~~~~> Map < Nom de la station , Station correspondante à la clé >
     */
     private Map<String, Station> stations = new HashMap<>(); // Clé : départ de la liaison
 
@@ -170,6 +170,16 @@ public class Reseau {
         informations += "]\n";
 
         return informations;
+    }
+
+
+    /*
+    ~~~~~~~~~~~~~~> " Plus court chemin part "
+    */
+
+    public static List<Liaison> getCourtChemin(String startStationName, String startHour, String endStationName, String endHour) {
+
+        return new ArrayList<>();
     }
 
 }
