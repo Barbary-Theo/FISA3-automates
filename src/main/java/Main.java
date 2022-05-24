@@ -7,29 +7,262 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException, ParseException {
-        System.out.println(" \n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ START ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ");
+    public static void main(String[] args) {
+        System.out.println(" \n ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~> START <~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ");
 
         Reseau reseau = Reseau.getInstance();
-        //readJSON("src/main/resources/bus.json", reseau);
-        readMetroTEXT(new File("src/main/resources/metro.txt"));
-        //System.out.println(setStartTime("test", 15, new Exploitant("metro"), new Station("depart", new ArrayList<>()), new Station("arrive", new ArrayList<>())));
+
+        boolean busCheck = readJSONBus("src/main/resources/bus.json", reseau);
+        //readMetroTEXT(new File("src/main/resources/metro.txt"));
+        //checkTextFile(new File("/Users/martinthibaut/Desktop/metro.txt"));
+        boolean trainCheck = readTrainXML("src/main/resources/train.xml", reseau);
+        boolean tramCheck = readTramXML("src/main/resources/tram.xml", reseau);
+
+        if (tramCheck && trainCheck && busCheck) {
+            System.out.println(reseau);
+            reseau.getCourtChemin("Gare", "0810", "Avlon");
+        }
     }
 
-    static void readMetroTEXT(File file) {
+    private static boolean readTramXML(String fileName, Reseau reseau) {
+
+        boolean succes;
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+
+        try {
+            dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = db.parse(new File(fileName));
+
+            doc.getDocumentElement().normalize();
+
+            NodeList list = doc.getElementsByTagName("ligne");
+
+            if(list.getLength() == 0) {
+                throwException("Error syntax -> Tags 'ligne' not found");
+                return false;
+            }
+
+
+
+            for(int temp = 0 ; temp < list.getLength() ; temp ++) {
+                int counterRealTag = -1;
+
+                Node node = list.item(temp);
+                String lineName = node.getFirstChild().getNodeValue().replaceAll(" ", "").replaceAll("\n", "");
+
+
+                if (node.getNodeType() == Node.ELEMENT_NODE) {
+
+                    succes = getInfoToUpdateReseau(reseau, node, counterRealTag, lineName);
+                    if(!succes) return false;
+
+                }
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
+
+
+    private static boolean getInfoToUpdateReseau(Reseau reseau, Node node, int counterRealTag, String lineName) {
+        Element element = (Element) node;
+        NodeList line = node.getChildNodes();
+        boolean succes;
+        String[] stations;
+
+        for(int tempJunction = 0 ; tempJunction < line.getLength() ; tempJunction ++) {
+
+            Node nodeJunction = line.item(tempJunction);
+
+            if (nodeJunction.getNodeType() == Node.ELEMENT_NODE ) {
+                counterRealTag ++;
+
+
+                if(counterRealTag == 0) {
+                    if(!nodeJunction.getChildNodes().toString().contains("stations")) {
+                        throwException("Error Tag -> the first tag of tag 'ligne' need to be 'stations' within stations");
+                        return false;
+                    }
+                }
+                else {
+
+                    stations = element.getElementsByTagName("stations").item(0).getTextContent().split(" ");
+
+                    Node currentHorairesNode = nodeJunction.getChildNodes().item(0);
+                    String[] currentHoraires = currentHorairesNode.getTextContent().split(" ");
+
+                    if(stations.length == currentHoraires.length) {
+
+                        succes = addLiaisonTram(reseau, currentHoraires, stations, lineName);
+                        if(!succes) return false;
+
+                    }
+                    else {
+                        throwException("Error syntax -> the number of timestamp indicated "+ Arrays.toString(currentHoraires) +" is not the same than stations "+ Arrays.toString(stations));
+                        return false;
+                    }
+
+                }
+
+            }
+        }
+        return true;
+    }
+
+
+    private static boolean addLiaisonTram(Reseau reseau, String[] currentHoraires, String[] stations, String lineName) {
+
+        for(int indexCurrentHoraires = 0 ; indexCurrentHoraires < currentHoraires.length - 1 ; indexCurrentHoraires++) {
+
+            if(reseau.verifStationExist(stations[indexCurrentHoraires]) && reseau.verifStationExist(stations[indexCurrentHoraires + 1])) {
+
+                int duree = getDureeByHour(currentHoraires[indexCurrentHoraires], currentHoraires[indexCurrentHoraires + 1]);
+                if (duree == -1) return false;
+
+                reseau.addLiaison(
+                        new Liaison(
+                                lineName,
+                                currentHoraires[indexCurrentHoraires + 1],
+                                currentHoraires[indexCurrentHoraires],
+                                duree,
+                                new Exploitant("Tram"),
+                                reseau.findStationByName(stations[indexCurrentHoraires]),
+                                reseau.findStationByName(stations[indexCurrentHoraires + 1])
+                        )
+                );
+            }
+            else {
+                throwException("Error station name -> station " + stations[indexCurrentHoraires] + " or " + stations[indexCurrentHoraires + 1] + " does not exist in the reseau");
+                return false;
+            }
+        }
+
+        return true;
+
+    }
+
+
+
+    /* ~~~~~~~~~~~~~~~~~~~ READ TRAIN ~~~~~~~~~~~~~~~~~~~ */
+
+    private static boolean readTrainXML(String fileName, Reseau reseau) {
+        boolean succes;
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+
+        try {
+            dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = db.parse(new File(fileName));
+
+            doc.getDocumentElement().normalize();
+            NodeList list = doc.getElementsByTagName("line");
+
+            if(list != null && list.getLength() != 0) {
+
+                for(int temp = 0 ; temp < list.getLength() ; temp ++) {
+
+                    Node node = list.item(temp);
+                    NodeList junctions = node.getChildNodes();
+                    String lineName = node.getFirstChild().getNodeValue().replaceAll(" ", "").replaceAll("\n", "");
+
+                    for(int tempJunction = 0 ; tempJunction < junctions.getLength() ; tempJunction ++) {
+
+                        Node nodeJunction = junctions.item(tempJunction);
+
+                        succes = addLiaisonTrain(reseau, nodeJunction, lineName);
+                        if(!succes) return false;
+
+                    }
+                }
+
+            }
+            else {
+                throwException("Tag exception -> tag 'line' does not exist");
+                return false;
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+
+    }
+
+    public static boolean addLiaisonTrain(Reseau reseau, Node nodeJunction, String lineName) throws Exception {
+
+        if (nodeJunction.getNodeType() == Node.ELEMENT_NODE) {
+
+            Element element = (Element) nodeJunction;
+
+            Node startStation = element.getElementsByTagName("start-station").item(0);
+            Node endStation = element.getElementsByTagName("arrival-station").item(0);
+            Node startHour = element.getElementsByTagName("start-hour").item(0);
+            Node endHour = element.getElementsByTagName("arrival-hour").item(0);
+
+            if(startStation == null || endStation == null || startHour == null || endHour == null) {
+                throwException("Tag syntax error -> a tag 'start-station' or 'arrival-station' or 'start-hour' or 'arrival-hour' is not present in tag junction or wrongly spelt");
+            }
+            else {
+                int duree = getDureeByHour(startHour.getTextContent(), endHour.getTextContent());
+                if (duree == -1) return false;
+                Station stationDepart = reseau.findStationByName(startStation.getTextContent());
+                Station stationEnd = reseau.findStationByName(endStation.getTextContent());
+
+                if(reseau.verifStationExist(startStation.getTextContent()) && reseau.verifStationExist(endStation.getTextContent())) {
+                    reseau.addLiaison(
+                            new Liaison(
+                                    lineName,
+                                    endHour.getTextContent(),
+                                    startHour.getTextContent(),
+                                    duree,
+                                    new Exploitant("Train"),
+                                    stationDepart,
+                                    stationEnd
+                            )
+                    );
+                }
+                else {
+                    throwException("Station name error -> station named " + startStation.getTextContent() + " or " + endStation.getTextContent() + " does not exist in the reseau");
+                    return false;
+                }
+            }
+
+        }
+        return true;
+    }
+
+
+    static void checkTextFile(File file) {
         try {
             List<String> allLines = Files.readAllLines(Paths.get("src/main/resources/metro.txt"));
 
@@ -131,6 +364,7 @@ public class Main {
                     String temp = bufferedReader.readLine();
                     lineNumber++;
                     String[] stations = temp.split(" ");
+<<<<<<< HEAD
                     int finalLineNumber = lineNumber;
                     Reseau reseau = Reseau.getInstance();
                     for (String station: stations) {
@@ -180,6 +414,9 @@ public class Main {
                     }catch (Exception e) {
                         e.printStackTrace();
                     }
+=======
+
+>>>>>>> 1b2478f30f0b9873dadafbb30a63e2b2bf0d351e
                 }
                 lineNumber++;
             }*/
@@ -236,7 +473,10 @@ public class Main {
     }
 
 
-    public static void readJSON(String filePath, Reseau reseau) throws IOException, ParseException {
+    /* ~~~~~~~~~~~~~~~~~~~ READ BUS ~~~~~~~~~~~~~~~~~~~ */
+
+    public static boolean readJSONBus(String filePath, Reseau reseau) {
+        boolean succes;
 
         try {
             FileReader fileReader = new FileReader(filePath);
@@ -250,93 +490,103 @@ public class Main {
 
             horaires = (JSONArray) jsonObject.get("horaires");
 
-            if(horaires != null) {
+            String ligne = (String) jsonObject.get("ligne");
+
+            if (ligne == null) {
+                TagException("ligne", jsonObject);
+                return false;
+            }
+
+            if (horaires != null) {
                 for (Object horaire : horaires) {
                     horaireParsed = (JSONObject) horaire;
 
-                    getStationByHoraires(reseau, horaireParsed, allStation);
+                    succes = getStationByHoraires(reseau, horaireParsed, allStation);
+                    if(!succes) return false;
 
-                    updateAddLiaison(reseau, horaireParsed, allStation);
+                    succes = addLiaisonBus(reseau, horaireParsed, allStation, ligne);
+                    if(!succes) return false;
 
                     allStation.clear();
                 }
-            }
-            else {
+            } else {
                 TagException("horaires", jsonObject);
+                return false;
             }
 
         } catch (IOException | ParseException e) {
             System.err.println("Error syntax in json file : " + e);
+            return false;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
+
+        return true;
 
     }
 
-
-    public static void getStationByHoraires(Reseau reseau, JSONObject horaireParsed, List<Station> allStation) throws Exception {
+    public static boolean getStationByHoraires(Reseau reseau, JSONObject horaireParsed, List<Station> allStation) {
 
         JSONArray stations = (JSONArray) horaireParsed.get("stations");
 
-        if(stations != null) {
+        if (stations != null) {
             JSONObject stationParsed;
 
             for (Object station : stations) {
                 stationParsed = (JSONObject) station;
 
-                if(stationParsed.get("station") != null) {
+                if (stationParsed.get("station") != null) {
+
                     if (!reseau.verifStationExist(stationParsed.get("station").toString())) {
-                        try {
-                            throw new Exception("Unknown station -> Station does not exist : " + stationParsed.get("station").toString());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            Thread.currentThread().interrupt();
-                        }
+                        throwException("Unknown station -> Station does not exist in the reseau : " + stationParsed.get("station").toString());
+                        return false;
                     }
                     else {
                         allStation.add(reseau.findStationByName(stationParsed.get("station").toString()));
                     }
+
                 }
                 else {
                     TagException("station", stationParsed);
+                    return false;
                 }
 
             }
         }
         else {
             TagException("stations", horaireParsed);
+            return false;
         }
+
+        return true;
 
 
     }
 
-    public static void updateAddLiaison(Reseau reseau, JSONObject horaireParsed, List<Station> allStation) throws Exception {
+    public static boolean addLiaisonBus(Reseau reseau, JSONObject horaireParsed, List<Station> allStation, String ligne) {
 
         JSONArray passages = (JSONArray) horaireParsed.get("passages");
 
-        if(passages != null) {
+        if (passages != null) {
             JSONArray passageParsed;
 
             for (Object passage : passages) {
                 passageParsed = (JSONArray) passage;
 
-                if(allStation.size() != passageParsed.size()) {
-                    try {
-                        throw new Exception("Not  the same number of data between station name and time indications -> There are " + allStation.size() + " station(s) whereas there are " + passageParsed.size() + " time indication(s) in " + passageParsed.toString());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        Thread.currentThread().interrupt();
-                    }
+                if (allStation.size() != passageParsed.size()) {
+                    throwException("Not  the same number of data between station name and timestamp -> There are " + allStation.size() + " station(s) whereas there are " + passageParsed.size() + " timestamp in " + passageParsed);
+                    return false;
                 }
 
                 for (int j = 0; j < passageParsed.size() - 1; j++) {
 
-                    //System.out.println(allStation.get(j).getName() + " TO " + allStation.get(j + 1).getName() + " : " + passageParsed.get(j).toString() + " - " + passageParsed.get(j + 1).toString());
+                    int duree = getDureeByHour(passageParsed.get(j).toString(), passageParsed.get(j + 1).toString());
+                    if (duree == -1) return false;
 
-                    int duree = Integer.parseInt(passageParsed.get(j + 1).toString()) - Integer.parseInt(passageParsed.get(j).toString());
                     reseau.addLiaison(
                             new Liaison(
-                                    "A", // name
+                                    ligne, // name
                                     passageParsed.get(j + 1).toString(),
                                     passageParsed.get(j).toString(),
                                     duree,
@@ -346,13 +596,15 @@ public class Main {
                             )
                     );
                 }
-                //System.out.println();
 
             }
         }
         else {
             TagException("passages", horaireParsed);
+            return false;
         }
+
+        return true;
 
     }
 
@@ -364,4 +616,37 @@ public class Main {
         }
     }
 
+    public static void throwException(String exceptionComment) {
+        try {
+            throw new Exception(exceptionComment);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static int getDureeByHour(String start, String end) {
+
+        if(start != null && end != null && start.length() == 4 && end.length() == 4) {
+
+            try {
+                int duree = Integer.parseInt(end) - Integer.parseInt(start);
+
+                if(start.charAt(1) != end.charAt(1)) {
+                    duree -= 40;
+                }
+                return duree;
+
+            } catch (Exception e) {
+                throwException("Horaire format exception -> horaire can't be parse in number, in " + start + " or " + end);
+                return -1;
+            }
+        }
+        else {
+            throwException("Horaire format exception -> horaire must contains 4 characters, in " + start + " or " + end);
+            return -1;
+        }
+
+    }
+
 }
+

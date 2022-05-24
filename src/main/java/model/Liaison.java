@@ -101,6 +101,7 @@ public class Liaison {
 
     @Override
     public String toString() {
+
         return "Liaison{" +
                 "name='" + name + '\'' +
                 ", heureDepart='" + heureDepart + '\'' +
@@ -111,4 +112,11 @@ public class Liaison {
                 ", stationDestination=" + stationDestination.getName() +
                 '}';
     }
+
+    public String formatHour(String horaire) {
+        String infos = "";
+        infos = horaire.charAt(0) + "" + horaire.charAt(1) + "h" + horaire.charAt(2) + "" + horaire.charAt(3);
+        return infos;
+    }
+
 }

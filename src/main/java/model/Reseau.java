@@ -1,13 +1,18 @@
 package model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Reseau {
 
     private static Reseau singleton;
-    private List<Liaison> liaisons = new ArrayList<>();
-    private List<Station> stations = new ArrayList<>();
+     /*
+     ~~~~~~~> Map < Nom de la station de départ , Liste des liaisons avec comme départ le nom de la station clé >
+     */
+    private Map<String, List<Liaison>> liaisons = new HashMap<>();
+    /*
+    ~~~~~~~> Map < Nom de la station , Station correspondante à la clé >
+    */
+    private Map<String, Station> stations = new HashMap<>(); // Clé : départ de la liaison
 
     private Reseau() {
         Station Limo = new Station("Limo", new ArrayList<>());
@@ -79,17 +84,17 @@ public class Reseau {
         Piscine.addVoisin(Ecole);
         Piscine.addVoisin(Parc);
 
-        stations.add(Parc);
-        stations.add(Piscine);
-        stations.add(Gare);
-        stations.add(Ecole);
-        stations.add(Limo);
-        stations.add(Singha);
-        stations.add(Neuville);
-        stations.add(Mairie);
-        stations.add(Syen);
-        stations.add(Avlon);
-        stations.add(Arly);
+        stations.put("Parc", Parc);
+        stations.put("Piscine", Piscine);
+        stations.put("Gare", Gare);
+        stations.put("Ecole", Ecole);
+        stations.put("Limo", Limo);
+        stations.put("Singha", Singha);
+        stations.put("Neuville", Neuville);
+        stations.put("Mairie", Mairie);
+        stations.put("Syen", Syen);
+        stations.put("Avlon", Avlon);
+        stations.put("Arly", Arly);
     }
 
     public static Reseau getInstance() {
@@ -102,41 +107,114 @@ public class Reseau {
 
 
     public void addLiaison(Liaison liaison) {
-        liaisons.add(liaison);
+        if(liaisons.containsKey(liaison.getStationDepart().getName())) {
+            var ele = liaisons.get(liaison.getStationDepart().getName());
+            ele.add(liaison);
+            liaisons.put(liaison.getStationDepart().getName(), ele);
+        }
+        else {
+            List<Liaison> ele = new ArrayList<>();
+            ele.add(liaison);
+            liaisons.put(liaison.getStationDepart().getName(), ele);
+        }
     }
 
     public void addStation(Station station) {
-        stations.add(station);
+        stations.put(station.getName(), station);
     }
 
-    public List<Liaison> getLiaisons() {
+    public Map<String, List<Liaison>> getLiaisons() {
         return liaisons;
     }
 
-    public void setLiaisons(List<Liaison> liaisons) {
+    public void setLiaisons(Map<String, List<Liaison>> liaisons) {
         this.liaisons = liaisons;
     }
 
-    public List<Station> getStations() {
+    public Map<String, Station> getStations() {
         return stations;
     }
 
-    public void setStations(List<Station> stations) {
+    public void setStations( Map<String, Station> stations) {
         this.stations = stations;
     }
 
     public boolean verifStationExist(String stationName) {
-        return stations.stream().anyMatch(station -> station.getName().equals(stationName));
+        return stations.containsKey(stationName);
     }
 
     public Station findStationByName(String stationName) {
+        return stations.get(stationName);
+    }
 
-        for(Station station : stations) {
-            if(station.getName().equals(stationName)) {
-                return station;
+    public List<Liaison> findLiaisonByStartStation(String stationName) {
+        return liaisons.get(stationName);
+    }
+
+    @Override
+    public String toString() {
+        System.out.println();
+
+        String informations = "Stations : [\n";
+        for(Station station : stations.values()) {
+            informations += "\t" + station.toString() + "\n";
+        }
+        informations += "]\n";
+        informations += "Liaisons : [\n";
+
+        for(List<Liaison> liaisonList : liaisons.values()) {
+            for (Liaison liaison : liaisonList) {
+                informations += "\t" + liaison.toString() + "\n";
+            }
+        }
+        informations += "]\n";
+
+        return informations;
+    }
+
+
+    /*
+    ~~~~~~~~~~~~~~> " Plus court chemin part "
+    */
+
+    public List<Liaison> getCourtChemin(String startStationName, String startHourNotParsed, String endStationName) {
+
+        if(parametersAreValid(startStationName, startHourNotParsed, endStationName)) {
+
+            try {
+                int startHour = Integer.parseInt(startHourNotParsed);
+
+
+
+                System.out.println(" -> correct parameters : Du bois, merci");
+                return new ArrayList<>();
+
+            } catch (Exception e) {
+                throwException("Error -> hour can not be parsed in Integer");
+                return new ArrayList<>();
             }
         }
 
-        return null;
+        System.err.println("Error parameters -> station does not exist or hour not correctly defined, hour need to be like '0810' for 08h10.");
+        return new ArrayList<>();
     }
+
+    public boolean parametersAreValid(String startStationName, String startHour, String endStationName) {
+
+        return singleton.verifStationExist(startStationName) &&
+                singleton.verifStationExist(endStationName) &&
+                startHour != null && startHour.length() == 4;
+
+    }
+
+
+
+    public void throwException(String exceptionComment) {
+        try {
+            throw new Exception(exceptionComment);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
