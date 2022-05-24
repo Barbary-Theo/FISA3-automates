@@ -6,11 +6,11 @@ public class Reseau {
 
     private static Reseau singleton;
      /*
-     ~~~~~~~ Map < Nom de la station de départ , Liste des liaisons avec comme départ le nom de la station clé >
+     ~~~~~~~> Map < Nom de la station de départ , Liste des liaisons avec comme départ le nom de la station clé >
      */
     private Map<String, List<Liaison>> liaisons = new HashMap<>();
     /*
-    ~~~~~~~ Map < Nom de la station , Station correspondante à la clé >
+    ~~~~~~~> Map < Nom de la station , Station correspondante à la clé >
     */
     private Map<String, Station> stations = new HashMap<>(); // Clé : départ de la liaison
 
@@ -170,6 +170,51 @@ public class Reseau {
         informations += "]\n";
 
         return informations;
+    }
+
+
+    /*
+    ~~~~~~~~~~~~~~> " Plus court chemin part "
+    */
+
+    public List<Liaison> getCourtChemin(String startStationName, String startHourNotParsed, String endStationName) {
+
+        if(parametersAreValid(startStationName, startHourNotParsed, endStationName)) {
+
+            try {
+                int startHour = Integer.parseInt(startHourNotParsed);
+
+
+
+                System.out.println(" -> correct parameters : Du bois, merci");
+                return new ArrayList<>();
+
+            } catch (Exception e) {
+                throwException("Error -> hour can not be parsed in Integer");
+                return new ArrayList<>();
+            }
+        }
+
+        System.err.println("Error parameters -> station does not exist or hour not correctly defined, hour need to be like '0810' for 08h10.");
+        return new ArrayList<>();
+    }
+
+    public boolean parametersAreValid(String startStationName, String startHour, String endStationName) {
+
+        return singleton.verifStationExist(startStationName) &&
+                singleton.verifStationExist(endStationName) &&
+                startHour != null && startHour.length() == 4;
+
+    }
+
+
+
+    public void throwException(String exceptionComment) {
+        try {
+            throw new Exception(exceptionComment);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
