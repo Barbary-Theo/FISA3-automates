@@ -25,13 +25,17 @@ public class Main {
 
         Reseau reseau = Reseau.getInstance();
         //readJSON("src/main/resources/bus.json", reseau);
-        readMetroTEXT(new File("src/main/resources/metro.txt"));
-        //System.out.println(setStartTime("test", 15, new Exploitant("metro"), new Station("depart", new ArrayList<>()), new Station("arrive", new ArrayList<>())));
+        //readMetroTEXT();
+        readInterCiteTEXT();
+        System.out.println(reseau.getLiaisons());
     }
 
-    static void readMetroTEXT(File file) {
+    public static void readMetroTEXT() {
         try {
+            File file = new File("src/main/resources/metro.txt");
             List<String> allLines = Files.readAllLines(Paths.get("src/main/resources/metro.txt"));
+
+            Exploitant metro = new Exploitant("Métro");
 
             // Récupération des données dans le fichier texte
             int timeBreakStation = Integer.parseInt(allLines.get(allLines.size() - 5).substring(11, 12));
@@ -43,7 +47,7 @@ public class Main {
             sb.deleteCharAt(2);
             String startLineTime1 = sb.toString();
 
-            sb = new StringBuilder(allLines.get(allLines.size() - 3).substring(50, 56));
+            sb = new StringBuilder(allLines.get(allLines.size() - 3).substring(50, 55));
             sb.deleteCharAt(2);
             String endLineTime1 = sb.toString();
 
@@ -52,7 +56,7 @@ public class Main {
             sb.deleteCharAt(2);
             String startLineTime2 = sb.toString();
 
-            sb = new StringBuilder(allLines.get(allLines.size() - 3).substring(69, 74));
+            sb = new StringBuilder(allLines.get(allLines.size() - 3).substring(70, 75));
             sb.deleteCharAt(2);
             String endLineTime2 = sb.toString();
 
@@ -82,8 +86,8 @@ public class Main {
                     String temp = allLines.get(++i);
                     String[] stations = temp.split(" ");
                     Reseau reseau = Reseau.getInstance();
-                    for (String station: stations) {
-                        if (!reseau.verifStationExist(station)){
+                    for (String station : stations) {
+                        if (!reseau.verifStationExist(station)) {
                             String error = "The station \"" + station + "\" doesn't exist. (Line " + ++i + " in " + file.getName() + ")";
                             try {
                                 throw new Exception(error);
@@ -91,7 +95,8 @@ public class Main {
                                 e.printStackTrace();
                             }
                         }
-                    };
+                    }
+                    ;
                 }
 
                 if (line.startsWith("%") && line.contains("liaisons A/R")) {
@@ -101,11 +106,15 @@ public class Main {
                         String temp = "";
                         while (!(temp = allLines.get(j)).isEmpty()) {
                             if (!temp.startsWith("%")) {
-                                System.out.println(temp);
+                                String[] splitLiaison = temp.split(" ");
+                                ArrayList<Liaison> liaisons = new ArrayList<Liaison>();
+                                liaisons = setStartTime(false, timeBreakStation, timeStepHappyHour, timeStepNoHappyHour, startLineTime1, endLineTime1, startLineTime2, endLineTime2, endLineOfDay, setLiaisonName(splitLiaison[0], splitLiaison[1]), Integer.parseInt(splitLiaison[2]), metro, reseau.findStationByName(splitLiaison[0]), reseau.findStationByName(splitLiaison[1]));
+
+                                //reseau.addAllLiaison(liaisons);
                             }
                             j++;
                         }
-                    }catch (Exception e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
 
@@ -188,46 +197,162 @@ public class Main {
         }
     }
 
-    public static String setStartTime(int timeBreakStation, int timeStepHappyHour, int timeStepNoHappyHour, String startTimeLine1, String endTimeLine1, String startTimeLine2, String endTimeLine2, String endLineOfDay, String name, int duree, Exploitant type, Station stationDepart, Station stationDestination) {
-        ArrayList<Liaison> liaisons = new ArrayList<Liaison>();
-        for (int i = 700; i <= 900; i+=10) {
-            if (i == 760) i = 800;
-            if (i == 860) i = 900;
-            liaisons.add(new Liaison(name, Integer.toString(i), setTripTime(i, duree), duree, type, stationDepart, stationDestination));
-        }
+    public static void readInterCiteTEXT() {
+        try {
+            File file = new File("src/main/resources/interCites.txt");
+            List<String> allLines = Files.readAllLines(Paths.get("src/main/resources/interCites.txt"));
 
-        for (int i = 920; i <= 1630; i+=20) {
-            if (i == 960) i = 1000;
+            Exploitant car = new Exploitant("Car");
+            ArrayList<String> lines = new ArrayList<String>();
+            boolean liaison = false;
+            for (int i = 0; i < allLines.size(); i++) {
+                String line = allLines.get(i);
+
+                if (i == 0 && (!line.startsWith("%") || !line.contains("Car Inter-Cité"))) {
+                    String error = "The first line is not in the expected format. (Line " + ++i + " in " + file.getName() + ")";
+                    throw new Exception(error);
+                }
+
+                if (i == 3 && (!line.startsWith("%") || !line.contains("liste des liaisons"))) {
+                    String error = "The first line is not in the expected format. (Line " + ++i + " in " + file.getName() + ")";
+                    throw new Exception(error);
+                }
+
+                if (i == 6 && (!line.startsWith("%") || !line.contains("liste d'horaires"))) {
+                    String error = "The first line is not in the expected format. (Line " + ++i + " in " + file.getName() + ")";
+                    throw new Exception(error);
+                }
+
+                if (!line.startsWith("%")) {
+                    if (line.startsWith("//")) {
+                        liaison = true;
+                    }
+
+                    if (!liaison) {
+                        lines.add(line);
+                    }else {
+                        for (String element : lines) {
+                            String[] tableau = element.split("[ \t]+");
+                            String[] temp = line.split("[ \t]+");
+                            String debut = tableau[0];
+                            String fin = tableau[1];
+                            Reseau reseau = Reseau.getInstance();
+                            if (line.startsWith(debut) && line.contains(fin)) {
+                                reseau.addLiaison(new Liaison(setLiaisonName(debut, fin), temp[2], setTripTime(Integer.parseInt(temp[2]), Integer.parseInt(tableau[2])), Integer.parseInt(tableau[2]), new Exploitant("Car Inter-Cité"), reseau.findStationByName(temp[0]), reseau.findStationByName(temp[1])));
+                            }else if (line.startsWith(fin) && line.contains(debut)) {
+                                reseau.addLiaison(new Liaison(setLiaisonName(fin, debut), temp[2], setTripTime(Integer.parseInt(temp[2]), Integer.parseInt(tableau[2])), Integer.parseInt(tableau[2]), new Exploitant("Car Inter-Cité"), reseau.findStationByName(temp[1]), reseau.findStationByName(temp[0])));
+
+                            }
+                        }
+                    }
+                }
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static ArrayList<Liaison> setStartTime(boolean returnTrip, int timeBreakStation, int timeStepHappyHour, int timeStepNoHappyHour, String startTimeLine1, String endTimeLine1, String startTimeLine2, String endTimeLine2, String endLineOfDay, String name, int duree, Exploitant type, Station stationDepart, Station stationDestination) {
+        ArrayList<Liaison> liaisons = new ArrayList<Liaison>();
+        int temp = Integer.parseInt(startTimeLine1);
+        if (!returnTrip) {
+            for (int i = Integer.parseInt(startTimeLine1); i <= Integer.parseInt(endTimeLine1); i += timeStepHappyHour) {
+                if (i >= temp + 60) {
+                    i = temp + 100;
+                    temp = i;
+                }
+                liaisons.add(new Liaison(name, Integer.toString(i), setTripTime(i, duree), duree, type, stationDepart, stationDestination));
+            }
+
+            for (int i = temp; i <= Integer.parseInt(startTimeLine2); i += timeStepNoHappyHour) {
+                if (i >= (temp + 60)) {
+                    i = temp + 100;
+                    temp = i;
+                }
+            /*if (i == 960) i = 1000;
             if (i == 1060) i = 1100;
             if (i == 1160) i = 1200;
             if (i == 1260) i = 1300;
             if (i == 1360) i = 1400;
             if (i == 1460) i = 1500;
-            if (i == 1560) i = 1600;
-            liaisons.add(new Liaison(name, Integer.toString(i), setTripTime(i, duree), duree, type, stationDepart, stationDestination));
+            if (i == 1560) i = 1600;*/
+                liaisons.add(new Liaison(name, Integer.toString(i), setTripTime(i, duree), duree, type, stationDepart, stationDestination));
 
-        }
+            }
 
-        for (int i = 1630; i <= 1800; i+=10) {
-            if (i == 1660) i = 1700;
-            if (i == 1760) i = 1800;
-            liaisons.add(new Liaison(name, Integer.toString(i), setTripTime(i, duree), duree, type, stationDepart, stationDestination));
+            for (int i = Integer.parseInt(startTimeLine2); i <= Integer.parseInt(endTimeLine2); i += timeStepHappyHour) {
+                if (i >= (temp + 60)) {
+                    i = temp + 100;
+                    temp = i;
+                }
+            /*if (i == 1660) i = 1700;
+            if (i == 1760) i = 1800;*/
+                liaisons.add(new Liaison(name, Integer.toString(i), setTripTime(i, duree), duree, type, stationDepart, stationDestination));
 
-        }
+            }
 
-        for (int i = 1820; i <= 2300; i+=20) {
-            if (i == 1860) i = 1900;
+            for (int i = temp; i <= Integer.parseInt(endLineOfDay); i += timeStepNoHappyHour) {
+                if (i >= (temp + 60)) {
+                    i = temp + 100;
+                    temp = i;
+                }
+            /*if (i == 1860) i = 1900;
             if (i == 1960) i = 2000;
             if (i == 2060) i = 2100;
             if (i == 2160) i = 2200;
-            if (i == 2260) i = 2300;
-            liaisons.add(new Liaison(name, Integer.toString(i), setTripTime(i, duree), duree, type, stationDepart, stationDestination));
+            if (i == 2260) i = 2300;*/
+                liaisons.add(new Liaison(name, Integer.toString(i), setTripTime(i, duree), duree, type, stationDepart, stationDestination));
 
-        }
-        return liaisons.toString();
+            }
+        }/*else {
+            for (int i = Integer.parseInt(startTimeLine1) + duree + timeBreakStation; i <= Integer.parseInt(endTimeLine1) + duree + timeBreakStation; i += timeStepHappyHour) {
+                if (i >= temp + 60) {
+                    i = temp + 100;
+                    temp = i;
+                }
+                liaisons.add(new Liaison(name, Integer.toString(i), setTripTime(i, duree), duree, type, stationDepart, stationDestination));
+            }
+
+            for (int i = temp; i <= Integer.parseInt(startTimeLine2) + duree + timeBreakStation; i += timeStepNoHappyHour) {
+                if (i >= (temp + 60)) {
+                    i = temp + 100;
+                    temp = i;
+                }
+                liaisons.add(new Liaison(name, Integer.toString(i), setTripTime(i, duree), duree, type, stationDepart, stationDestination));
+
+            }
+
+            for (int i = Integer.parseInt(startTimeLine2) + duree + timeBreakStation; i <= Integer.parseInt(endTimeLine2) + duree + timeBreakStation; i += timeStepHappyHour) {
+                if (i >= (temp + 60)) {
+                    i = temp + 100;
+                    temp = i;
+                }
+                liaisons.add(new Liaison(name, Integer.toString(i), setTripTime(i, duree), duree, type, stationDepart, stationDestination));
+
+            }
+
+            for (int i = temp; i <= Integer.parseInt(endLineOfDay) + duree + timeBreakStation; i += timeStepNoHappyHour) {
+                if (i >= (temp + 60)) {
+                    i = temp + 100;
+                    temp = i;
+                }
+                liaisons.add(new Liaison(name, Integer.toString(i), setTripTime(i, duree), duree, type, stationDepart, stationDestination));
+
+            }
+        }*/
+        System.out.println(liaisons);
+        return liaisons;
     }
 
     public static String setTripTime(int heure, int duree) {
+        int toInt = Integer.parseInt("" + (heure + duree));
+        int reste = toInt % 60;
+        if (reste != 0) {
+            int newHour = (heure + 100) - duree;
+            return "" + newHour;
+        }
         return "" + (heure + duree);
     }
 
@@ -250,7 +375,7 @@ public class Main {
 
             horaires = (JSONArray) jsonObject.get("horaires");
 
-            if(horaires != null) {
+            if (horaires != null) {
                 for (Object horaire : horaires) {
                     horaireParsed = (JSONObject) horaire;
 
@@ -260,8 +385,7 @@ public class Main {
 
                     allStation.clear();
                 }
-            }
-            else {
+            } else {
                 TagException("horaires", jsonObject);
             }
 
@@ -278,13 +402,13 @@ public class Main {
 
         JSONArray stations = (JSONArray) horaireParsed.get("stations");
 
-        if(stations != null) {
+        if (stations != null) {
             JSONObject stationParsed;
 
             for (Object station : stations) {
                 stationParsed = (JSONObject) station;
 
-                if(stationParsed.get("station") != null) {
+                if (stationParsed.get("station") != null) {
                     if (!reseau.verifStationExist(stationParsed.get("station").toString())) {
                         try {
                             throw new Exception("Unknown station -> Station does not exist : " + stationParsed.get("station").toString());
@@ -292,18 +416,15 @@ public class Main {
                             e.printStackTrace();
                             Thread.currentThread().interrupt();
                         }
-                    }
-                    else {
+                    } else {
                         allStation.add(reseau.findStationByName(stationParsed.get("station").toString()));
                     }
-                }
-                else {
+                } else {
                     TagException("station", stationParsed);
                 }
 
             }
-        }
-        else {
+        } else {
             TagException("stations", horaireParsed);
         }
 
@@ -314,13 +435,13 @@ public class Main {
 
         JSONArray passages = (JSONArray) horaireParsed.get("passages");
 
-        if(passages != null) {
+        if (passages != null) {
             JSONArray passageParsed;
 
             for (Object passage : passages) {
                 passageParsed = (JSONArray) passage;
 
-                if(allStation.size() != passageParsed.size()) {
+                if (allStation.size() != passageParsed.size()) {
                     try {
                         throw new Exception("Not  the same number of data between station name and time indications -> There are " + allStation.size() + " station(s) whereas there are " + passageParsed.size() + " time indication(s) in " + passageParsed.toString());
                     } catch (Exception e) {
@@ -349,8 +470,7 @@ public class Main {
                 //System.out.println();
 
             }
-        }
-        else {
+        } else {
             TagException("passages", horaireParsed);
         }
 

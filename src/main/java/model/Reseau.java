@@ -105,6 +105,10 @@ public class Reseau {
         liaisons.add(liaison);
     }
 
+    public void addAllLiaison(ArrayList<Liaison> l) {
+        liaisons.addAll(l);
+    }
+
     public void addStation(Station station) {
         stations.add(station);
     }

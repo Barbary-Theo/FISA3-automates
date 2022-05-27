@@ -20,6 +20,6 @@ Syen Gare 17
 
 % arrêt de 2 minutes en station
 
-% départ de Gare toutes les 10 minutes de 07:00 à 09:00 et de 16:30à 18:00
+% départ de Gare toutes les 10 minutes de 07:00 à 08:50 et de 16:30 à 18:00
 % départ de Gare toutes les 20 minutes sinon
 % dernier départ à 23:00
