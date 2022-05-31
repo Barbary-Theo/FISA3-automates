@@ -30,7 +30,7 @@ public class Main {
 
         Reseau reseau = Reseau.getInstance();
 
-        //boolean metroCheck = readMetroTEXT(new File("src/main/resources/metro.txt"), reseau);
+        boolean metroCheck = readMetroTEXT(new File("src/main/resources/metro.txt"), reseau);
 
         /*
         boolean busCheck = readJSONBus("src/main/resources/bus.json", reseau);
@@ -43,24 +43,198 @@ public class Main {
             reseau.getCourtChemin("Gare", "0810", "Avlon");
         }
          */
+        //System.out.println(reseau.toString());
 
+
+    }
+
+
+    public static boolean readMetroTEXT(File fileName, Reseau reseau) throws Exception {
+
+        List<String> allLines = Files.readAllLines(Paths.get(String.valueOf(fileName)));
+        boolean success = true;
+        Map<String, Double> info = new HashMap<>();
+
+        // 0) Devra récupérer les infos pour la création des trajets time start/fin ..
+        for(int i = allLines.size() -1   ; i >= 0 ; i--) {
+            String line = allLines.get(i);
+
+            if(line.contains("% dernier départ à ")) {
+                String horaire = line.split("% dernier départ à ")[1];
+                try {
+                    String[] endInfo = horaire.split(":");
+
+                    info.put("end", Double.parseDouble(endInfo[0] + endInfo[1]) / 100.0);
+                } catch (Exception e) {
+                    throwException("Error information -> can not parse " + horaire + " to horaire");
+                    return false;
+                }
+            }
+
+            if(line.contains("% départ de Gare toutes les") && line.contains("sinon")) {
+                String startAprem = line.split("% départ de Gare toutes les")[1];
+                String minute = startAprem.split(" minutes")[0];
+                try {
+                    info.put("intervalAprem", Double.parseDouble(minute) / 100.0);
+                } catch (Exception e) {
+                    throwException("Error information -> " + minute + " is not minute");
+                    return false;
+                }
+            }
+            else if (line.contains("% départ de Gare toutes les")) {
+                System.out.println(Arrays.toString(line.split("% départ de Gare toutes les ")));
+            }
+
+            if(line.contains("% arrêt de ") && line.contains(" minutes en station")){
+                String time = line.split("% arrêt de ")[1];
+                String minute = time.split(" minutes en station")[0];
+                try {
+                    info.put("arretStation", Double.parseDouble(minute) / 100.0);
+
+                } catch (Exception e) {
+                    throwException("Error information -> " + minute + " is not minute");
+                    return false;
+                }
+            }
+        }
+
+        System.out.println(info.toString());
+
+
+        for(int i = 0 ; i < allLines.size() ; i ++) {
+            int j = i;
+            String line = allLines.get(i);
+
+            if(line != null && line.contains("% depart arrivee duree")) {
+
+                j++;
+                List<String[]> circuitStocke = new ArrayList<>();
+
+                success = getAllCircuit(circuitStocke, allLines, i, j);
+                if (!success) return false;
+
+                success = checkLineFormat(reseau, circuitStocke);
+                if (!success) return false;
+
+                success = createLiaison(reseau, circuitStocke, info);
+                if (!success) return false;
+
+                i = j;
+            }
+
+        }
+
+        return true;
+    }
+
+
+    public static boolean getAllCircuit(List<String[]> circuitStocke, List<String> allLines, int i, int j) {
+
+        while (allLines.get(j) != null && !allLines.get(j).equals("") && !allLines.get(j).contains("%")) {
+            String[] eleLine = allLines.get(j).split(" ");
+
+            if (eleLine.length == 3) circuitStocke.add(eleLine);
+            else {
+                throwException("Error format -> line does not comport 'StationDepartName StationEndName Time' : " + allLines.get(j));
+                return false;
+            }
+            j++;
+        }
+
+        return true;
+    }
+
+    public static boolean checkLineFormat(Reseau reseau, List<String[]> circuitStocke) {
+
+        for(int stringIndex = 0 ; stringIndex < circuitStocke.size() - 1 ; stringIndex ++) {
+            if(!circuitStocke.get(stringIndex)[1].equals(circuitStocke.get(stringIndex + 1)[0]) ) {
+                throwException("Error format -> end station is not the same than next line start station : " + Arrays.toString(circuitStocke.get(stringIndex)));
+                return false;
+            }
+            if(reseau.findStationByName(circuitStocke.get(stringIndex)[0]) == null) {
+                throwException("Error Station name -> station " + circuitStocke.get(stringIndex)[0] + " does not exist");
+                return false;
+            }
+            if(reseau.findStationByName(circuitStocke.get(stringIndex)[1]) == null) {
+                throwException("Error Station name -> station " + circuitStocke.get(stringIndex)[0] + " does not exist");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean createLiaison(Reseau reseau, List<String[]> circuitStocke, Map<String, Double> info) {
 
         double start = 7;
-        double end = 22;
+        double end = info.get("end");
         double finMatin = 9;
-        double intervalStartMatin = 10 / 100.0;
-        double intervalStartAprem = 20 / 100.0;
+        double debutAprem = 16.30;
+        double finAprem = 18;
+        double intervalStartMatinAprem = 10 / 100.0;
+        double intervalStartAprem = info.get("intervalAprem");
+        double arretStation = Math.round((info.get("arretStation")) * 100) / 100.0;
 
         while (start <= end) {
 
-            System.out.println(start);
+            double circuitTime = start;
+            for (String[] pseudoLiaison : circuitStocke) {
+                try {
+                    double duree = Double.parseDouble(pseudoLiaison[2]) / 100.0;
+                    String startHour = formatDoubleToHoraire(circuitTime);
+                    String endHour = formatDoubleToHoraire(Math.round(checkHoraireValueAfterComputed(circuitTime + duree) * 100.0) / 100.0);
+                    Station startStation = reseau.findStationByName(pseudoLiaison[0]);
+                    Station endStation = reseau.findStationByName(pseudoLiaison[1]);
 
-            if(start < finMatin) start += intervalStartMatin;
+                    if(startHour == null || endHour == null) return false;
+
+                    Liaison liaison = new Liaison(
+                            "Aucun",
+                            startHour,
+                            endHour,
+                            getDureeByHour(startHour, endHour),
+                            new Exploitant("Métro"),
+                            startStation,
+                            endStation
+                    );
+                    reseau.addLiaison(liaison);
+                    circuitTime = Math.round(checkHoraireValueAfterComputed(circuitTime + duree + arretStation) * 100.0) / 100.0;
+
+                } catch (Exception e) {
+                    throwException("Parsing error -> impossible to parse " + pseudoLiaison[2] + " to a duration");
+                    return false;
+                }
+            }
+
+            if(start < finMatin || (start < finAprem && start >= debutAprem)) start += intervalStartMatinAprem;
             else start += intervalStartAprem;
+
             start = Math.round(start * 100.0) / 100.0;
+            start = checkHoraireValueAfterComputed(start);
+
         }
 
-        checkHoraireValueAfterComputed(7.8);
+        return true;
+    }
+
+    public static String formatDoubleToHoraire(Double value) {
+
+        String[] valueParts = value.toString().split("\\.");
+
+        if (valueParts.length != 0) {
+
+            if(valueParts[0].length() == 1) {
+                valueParts[0] = 0 + valueParts[0];
+            }
+            if(valueParts[1].length() == 1) {
+                valueParts[1] += 0;
+            }
+
+            return valueParts[0] + valueParts[1];
+        }
+        else {
+            throwException("Error format horaire -> " + value + " can not be split by '.' to create horaire");
+            return null;
+        }
 
     }
 
@@ -70,75 +244,25 @@ public class Main {
         int supValue = (int) Math.round(value);
         int infValue;
         double decimal;
+        double reste;
 
-        if(supValue >= value) {
+        if(supValue > value) {
             infValue = supValue - 1;
-            decimal = Math.abs(Math.round((infValue - value) * 100.0) / 100.0);
         }
         else {
             infValue = supValue;
-            supValue += 1;
-            decimal = Math.abs(Math.round((infValue - value) * 100.0) / 100.0);
         }
+        decimal = Math.abs(Math.round((infValue - value) * 100.0) / 100.0);
 
         if(decimal >= 0.6) {
-
+            reste = decimal - 0.6;
+            return infValue + 1 + reste;
+        }
+        else {
+            return value;
         }
 
-        return supValue;
-
     }
-
-
-    public static boolean readMetroTEXT(File fileName, Reseau reseau) throws Exception {
-
-        List<String> allLines = Files.readAllLines(Paths.get("src/main/resources/metro.txt"));
-
-        // 0) Devra récupérer les infos pour la création des trajets
-
-        for(int i = 0 ; i < allLines.size() ; i ++) {
-            int j = i;
-            String line = allLines.get(i);
-
-            if(line != null && line.contains("% depart arrivee duree")) {
-                j++;
-                List<String[]> circuitStocke = new ArrayList<>();
-
-                // 1) Récupérer les stations et leur durée
-                while (allLines.get(j) != null && !allLines.get(j).equals("") && !allLines.get(j).contains("%")) {
-                    String[] eleLine = allLines.get(j).split(" ");
-
-                    if (eleLine.length == 3) circuitStocke.add(eleLine);
-                    else {
-                        throwException("Error format -> line does not comport 'StationDepartName StationEndName Time' : " + allLines.get(j));
-                        return false;
-                    }
-                    j++;
-                }
-
-
-                // 2) Check conformité des éléments
-                for(int stringIndex = 0 ; stringIndex < circuitStocke.size() - 1 ; stringIndex ++) {
-                    if(!circuitStocke.get(stringIndex)[1].equals(circuitStocke.get(stringIndex + 1)[0])) {
-                        throwException("Error format -> end station is not the same than next line start station : " + Arrays.toString(circuitStocke.get(stringIndex)));
-                        return false;
-                    }
-                }
-
-
-                // 3) Création des trajets
-
-                i = j;
-
-                System.out.println();
-                break; // tempo
-            }
-
-        }
-
-        return true;
-    }
-
 
     public static boolean readTramXML(String fileName, Reseau reseau) {
 
@@ -314,7 +438,7 @@ public class Main {
 
     }
 
-    public static boolean addLiaisonTrain(Reseau reseau, Node nodeJunction, String lineName) throws Exception {
+    public static boolean addLiaisonTrain(Reseau reseau, Node nodeJunction, String lineName) {
 
         if (nodeJunction.getNodeType() == Node.ELEMENT_NODE) {
 

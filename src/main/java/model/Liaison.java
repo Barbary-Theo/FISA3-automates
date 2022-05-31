@@ -101,17 +101,9 @@ public class Liaison {
 
     @Override
     public String toString() {
-
-        return "Liaison{" +
-                "name='" + name + '\'' +
-                ", heureDepart='" + heureDepart + '\'' +
-                ", heureArrive='" + heureArrive + '\'' +
-                ", duree=" + duree +
-                ", type=" + type.getType() +
-                ", stationDepart=" + stationDepart.getName() +
-                ", stationDestination=" + stationDestination.getName() +
-                '}';
+        return "~~> line " + name + " : from " + stationDepart.getName() + " at " + formatHour(heureDepart) + " to " + stationDestination.getName() + " at " + formatHour(heureArrive) + ", in " + type.getType() + " during " + duree + " minutes";
     }
+
 
     public String formatHour(String horaire) {
         String infos = "";
