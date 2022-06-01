@@ -55,51 +55,8 @@ public class Main {
         boolean success = true;
         Map<String, Double> info = new HashMap<>();
 
-        // 0) Devra récupérer les infos pour la création des trajets time start/fin ..
-        for(int i = allLines.size() -1   ; i >= 0 ; i--) {
-            String line = allLines.get(i);
-
-            if(line.contains("% dernier départ à ")) {
-                String horaire = line.split("% dernier départ à ")[1];
-                try {
-                    String[] endInfo = horaire.split(":");
-
-                    info.put("end", Double.parseDouble(endInfo[0] + endInfo[1]) / 100.0);
-                } catch (Exception e) {
-                    throwException("Error information -> can not parse " + horaire + " to horaire");
-                    return false;
-                }
-            }
-
-            if(line.contains("% départ de Gare toutes les") && line.contains("sinon")) {
-                String startAprem = line.split("% départ de Gare toutes les")[1];
-                String minute = startAprem.split(" minutes")[0];
-                try {
-                    info.put("intervalAprem", Double.parseDouble(minute) / 100.0);
-                } catch (Exception e) {
-                    throwException("Error information -> " + minute + " is not minute");
-                    return false;
-                }
-            }
-            else if (line.contains("% départ de Gare toutes les")) {
-                System.out.println(Arrays.toString(line.split("% départ de Gare toutes les ")));
-            }
-
-            if(line.contains("% arrêt de ") && line.contains(" minutes en station")){
-                String time = line.split("% arrêt de ")[1];
-                String minute = time.split(" minutes en station")[0];
-                try {
-                    info.put("arretStation", Double.parseDouble(minute) / 100.0);
-
-                } catch (Exception e) {
-                    throwException("Error information -> " + minute + " is not minute");
-                    return false;
-                }
-            }
-        }
-
-        System.out.println(info.toString());
-
+        success = getAllInfoDepart(info, allLines);
+        if (!success) return false;
 
         for(int i = 0 ; i < allLines.size() ; i ++) {
             int j = i;
@@ -127,6 +84,103 @@ public class Main {
         return true;
     }
 
+
+    public static boolean getAllInfoDepart(Map<String, Double> info, List<String> allLines) {
+
+        boolean success = true;
+
+        for(int i = allLines.size() -1   ; i >= 0 ; i--) {
+            String line = allLines.get(i);
+
+            if(line.contains("% dernier départ à ")) {
+                String horaire = line.split("% dernier départ à ")[1];
+                try {
+                    String[] endInfo = horaire.split(":");
+
+                    info.put("end", Double.parseDouble(endInfo[0] + endInfo[1]) / 100.0);
+                } catch (Exception e) {
+                    throwException("Error information -> can not parse " + horaire + " to horaire");
+                    return false;
+                }
+            }
+
+            if(line.contains("% départ de Gare toutes les") && line.contains("sinon")) {
+                String startAprem = line.split("% départ de Gare toutes les")[1];
+                String minute = startAprem.split(" minutes")[0];
+                try {
+                    info.put("intervalAprem", Double.parseDouble(minute) / 100.0);
+                } catch (Exception e) {
+                    throwException("Error information -> " + minute + " is not minute");
+                    return false;
+                }
+            }
+            else if (line.contains("% départ de Gare toutes les")) {
+                success = getInfoTiming(info, line);
+                if (!success) return false;
+            }
+
+            if(line.contains("% arrêt de ") && line.contains(" minutes en station")){
+                String time = line.split("% arrêt de ")[1];
+                String minute = time.split(" minutes en station")[0];
+                try {
+                    info.put("arretStation", Double.parseDouble(minute) / 100.0);
+
+                } catch (Exception e) {
+                    throwException("Error information -> " + minute + " is not minute");
+                    return false;
+                }
+            }
+        }
+
+        if(!info.containsKey("each") || !info.containsKey("end") || !info.containsKey("intervalAprem") || !info.containsKey("arretStation")) {
+            throwException("Error information -> all information are not indicated check if following sentence are indicated : \n" +
+                    "\t % arrêt de X minutes en station\n" +
+                    "\t % départ de Gare toutes les X minutes de hh:mm à hh:mm et de hh:mm à hh:mm\n" +
+                    "\t % départ de Gare toutes les X minutes sinon\n" +
+                    "\t % dernier départ à hh:mm");
+            return false;
+        }
+
+        return true;
+
+    }
+
+
+    public static boolean getInfoTiming(Map<String, Double> info, String line) {
+        try {
+            String[] firstPart = line.split("% départ de Gare toutes les");
+            String[] secondPart = firstPart[1].split(" minutes de ");
+            String eachString = secondPart[0];
+            String[] thirdPart = secondPart[1].split(" à ");
+            String startMatinString = thirdPart[0];
+            String finApremString = thirdPart[2];
+            String[] fourthPart = thirdPart[1].split(" et de ");
+            String finMatinString = fourthPart[0];
+            String startApremString = fourthPart[1];
+
+            String[] startMatinTemp = startMatinString.split(":");
+            double startMatin = Double.parseDouble(startMatinTemp[0] + startMatinTemp[1]);
+
+            String[] finMatinTemp = finMatinString.split(":");
+            double finMatin = Double.parseDouble(finMatinTemp[0] + finMatinTemp[1]);
+
+            String[] startApremTemp = startApremString.split(":");
+            double startAprem = Double.parseDouble(startApremTemp[0] + startApremTemp[1]);
+
+            String[] finApremTemp = finApremString.split(":");
+            double finAprem = Double.parseDouble(finApremTemp[0] + finApremTemp[1]);
+
+            info.put("each", Math.round((Double.parseDouble(eachString) / 100.0) * 100 )/ 100.0);
+            info.put("startMatin", startMatin/ 100.0);
+            info.put("finMatin", finMatin / 100.0);
+            info.put("startAprem", startAprem / 100.0);
+            info.put("finAprem", (double) Math.round(finAprem / 100.0));
+        } catch (Exception e) {
+            throwException("Error information -> line " + line + " does not respect format '% départ de Gare toutes les X minutes de hh:mm à hh:mm et de hh:mm à hh:mm'");
+            return false;
+        }
+        return true;
+    }
 
     public static boolean getAllCircuit(List<String[]> circuitStocke, List<String> allLines, int i, int j) {
 
@@ -165,12 +219,12 @@ public class Main {
 
     public static boolean createLiaison(Reseau reseau, List<String[]> circuitStocke, Map<String, Double> info) {
 
-        double start = 7;
+        double start = info.get("startMatin");
         double end = info.get("end");
-        double finMatin = 9;
-        double debutAprem = 16.30;
-        double finAprem = 18;
-        double intervalStartMatinAprem = 10 / 100.0;
+        double finMatin = info.get("finMatin");
+        double debutAprem = info.get("startAprem");
+        double finAprem = info.get("finAprem");
+        double intervalStartMatinAprem = info.get("each");
         double intervalStartAprem = info.get("intervalAprem");
         double arretStation = Math.round((info.get("arretStation")) * 100) / 100.0;
 
