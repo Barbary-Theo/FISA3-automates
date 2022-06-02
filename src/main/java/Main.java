@@ -420,8 +420,8 @@ public class Main {
                 reseau.addLiaison(
                         new Liaison(
                                 lineName,
-                                currentHoraires[indexCurrentHoraires + 1],
                                 currentHoraires[indexCurrentHoraires],
+                                currentHoraires[indexCurrentHoraires + 1],
                                 duree,
                                 new Exploitant("Tram"),
                                 reseau.findStationByName(stations[indexCurrentHoraires]),
@@ -513,8 +513,8 @@ public class Main {
                     reseau.addLiaison(
                             new Liaison(
                                     lineName,
-                                    endHour.getTextContent(),
                                     startHour.getTextContent(),
+                                    endHour.getTextContent(),
                                     duree,
                                     new Exploitant("Train"),
                                     stationDepart,
@@ -647,8 +647,8 @@ public class Main {
                     reseau.addLiaison(
                             new Liaison(
                                     ligne, // name
-                                    passageParsed.get(j + 1).toString(),
                                     passageParsed.get(j).toString(),
+                                    passageParsed.get(j + 1).toString(),
                                     duree,
                                     new Exploitant("Bus"),
                                     allStation.get(j),
