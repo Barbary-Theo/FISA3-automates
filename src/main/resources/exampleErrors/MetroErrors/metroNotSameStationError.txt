@@ -10,7 +10,7 @@ Avlon Gare 15
 % liaisons A/R
 % depart arrivee duree
 Gare Parc 10
-Parc Gare 10
+Avlon Gare 10
 
 % liaisons circuit
 % depart arrivee duree

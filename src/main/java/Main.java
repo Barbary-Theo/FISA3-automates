@@ -30,20 +30,17 @@ public class Main {
 
         Reseau reseau = Reseau.getInstance();
 
-        boolean metroCheck = readMetroTEXT(new File("src/main/resources/metro.txt"), reseau);
-
-        /*
         boolean busCheck = readJSONBus("src/main/resources/bus.json", reseau);
-        //checkTextFile(new File("/Users/martinthibaut/Desktop/metro.txt"));
+        //checkTextFile(new File("/Users/martinthibaut/Desktop/metroWithoutInfoError.txt"));
         boolean trainCheck = readTrainXML("src/main/resources/train.xml", reseau);
         boolean tramCheck = readTramXML("src/main/resources/tram.xml", reseau);
+        boolean metroCheck = readMetroTEXT(new File("src/main/resources/metro.txt"), reseau);
 
-        if (tramCheck && trainCheck && busCheck) {
+        if (tramCheck && trainCheck && busCheck && metroCheck) {
             System.out.println(reseau);
             reseau.getCourtChemin("Gare", "0810", "Avlon");
         }
-         */
-        //System.out.println(reseau.toString());
+
 
 
     }
