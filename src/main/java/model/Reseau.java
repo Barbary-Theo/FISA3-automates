@@ -186,8 +186,10 @@ public class Reseau {
         if(parametersAreValid(startStationName, startHourNotParsed, endStationName)) {
 
             try {
-                int startHour = Integer.parseInt(startHourNotParsed);
 
+                for(Liaison liaison : liaisons.get(startStationName)) {
+                    System.out.println(liaison);
+                }
 
 
                 System.out.println(" -> correct parameters : Du bois, merci");
