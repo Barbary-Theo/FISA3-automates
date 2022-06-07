@@ -154,6 +154,7 @@ public class Reseau {
     @Override
     public String toString() {
         System.out.println();
+        int i = 0;
 
         String informations = "Stations : [\n";
         for(Station station : stations.values()) {
@@ -165,9 +166,12 @@ public class Reseau {
         for(List<Liaison> liaisonList : liaisons.values()) {
             for (Liaison liaison : liaisonList) {
                 informations += "\t" + liaison.toString() + "\n";
+                i++;
             }
         }
         informations += "]\n";
+
+        System.out.println("Nb liaison : " + i);
 
         return informations;
     }
