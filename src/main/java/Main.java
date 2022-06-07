@@ -31,17 +31,15 @@ public class Main {
         Reseau reseau = Reseau.getInstance();
 
         boolean busCheck = readJSONBus("src/main/resources/bus.json", reseau);
-        //checkTextFile(new File("/Users/martinthibaut/Desktop/metroWithoutInfoError.txt"));
+        boolean interCheck = readInterCiteTEXT();
         boolean trainCheck = readTrainXML("src/main/resources/train.xml", reseau);
         boolean tramCheck = readTramXML("src/main/resources/tram.xml", reseau);
         boolean metroCheck = readMetroTEXT(new File("src/main/resources/metro.txt"), reseau);
 
-        if (tramCheck && trainCheck && busCheck && metroCheck) {
+        if (tramCheck && trainCheck && busCheck && metroCheck && interCheck) {
             System.out.println(reseau);
             reseau.getCourtChemin("Gare", "0810", "Avlon");
         }
-
-
 
     }
 
@@ -706,6 +704,102 @@ public class Main {
             return -1;
         }
 
+    }
+
+    public static boolean readInterCiteTEXT() {
+        try {
+            File file = new File("src/main/resources/interCites.txt");
+            List<String> allLines = Files.readAllLines(Paths.get("src/main/resources/interCites.txt"));
+
+            Exploitant car = new Exploitant("Car");
+            ArrayList<String> lines = new ArrayList<String>();
+            boolean liaison = false;
+            for (int i = 0; i < allLines.size(); i++) {
+                String line = allLines.get(i);
+
+                if (i == 0 && (!line.startsWith("%") || !line.contains("Car Inter-Cité"))) {
+                    String error = "The first line is not in the expected format. (Line " + ++i + " in " + file.getName() + ")";
+                    throw new Exception(error);
+                }
+
+                if (i == 3 && (!line.startsWith("%") || !line.contains("liste des liaisons"))) {
+                    String error = "The first line is not in the expected format. (Line " + ++i + " in " + file.getName() + ")";
+                    throw new Exception(error);
+                }
+
+                if (i == 6 && (!line.startsWith("%") || !line.contains("liste d'horaires"))) {
+                    String error = "The first line is not in the expected format. (Line " + ++i + " in " + file.getName() + ")";
+                    throw new Exception(error);
+                }
+
+                if (!line.startsWith("%")) {
+                    if (line.startsWith("//")) {
+                        liaison = true;
+                    }
+
+                    if (!liaison) {
+                        lines.add(line);
+                    }else {
+                        for (String element : lines) {
+                            String[] tableau = element.split("[ \t]+");
+                            String[] temp = line.split("[ \t]+");
+                            String debut = tableau[0];
+                            String fin = tableau[1];
+                            Reseau reseau = Reseau.getInstance();
+                            if (line.startsWith(debut) && line.contains(fin)) {
+                                reseau.addLiaison(new Liaison(setLiaisonName(debut, fin), temp[2], setTripTime(Integer.parseInt(temp[2]), Integer.parseInt(tableau[2])), Integer.parseInt(tableau[2]), new Exploitant("Car Inter-Cité"), reseau.findStationByName(temp[0]), reseau.findStationByName(temp[1])));
+                            }
+                            else if (line.startsWith(fin) && line.contains(debut)) {
+                                reseau.addLiaison(new Liaison(setLiaisonName(fin, debut), temp[2], setTripTime(Integer.parseInt(temp[2]), Integer.parseInt(tableau[2])), Integer.parseInt(tableau[2]), new Exploitant("Car Inter-Cité"), reseau.findStationByName(temp[1]), reseau.findStationByName(temp[0])));
+
+                            }
+                        }
+                    }
+                }
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    public static String setTripTime(int heure, int duree) {
+
+            int toInt = Integer.parseInt("" + (heure + duree));
+            String toString = Integer.toString(toInt);
+
+            if(toString.length() < 4 ) {
+                toString = "0"  + toString;
+            }
+
+            int hour = Integer.parseInt(toString.substring(0, 2));
+
+            if(Integer.parseInt(toString.substring(0, 2) + "60") <= toInt ) {
+                hour += 1;
+                int reste = toInt - Integer.parseInt(toString.substring(0, 2) + "60");
+
+                if((hour+"").length() < 2 ) {
+                    toString = "0"  + hour;
+                    return toString + "" + reste;
+                }
+                else {
+                    if((reste+"").length() < 2) {
+                        return hour + "0" + reste;
+                    }
+                    return hour + "" + reste;
+                }
+
+            }
+
+            return toString;
+
+
+    }
+
+    public static String setLiaisonName(String depart, String arrive) {
+        return depart + "-" + arrive;
     }
 
 }
