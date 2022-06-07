@@ -12,6 +12,7 @@ public class Liaison {
     private Exploitant type;
     private Station stationDepart;
     private Station stationDestination;
+    private boolean checked = false;
 
     public Liaison(String heureDepart, String heureArrive, int duree, Exploitant type, Station stationDepart, Station stationDestination) {
         this.heureArrive = heureArrive;
@@ -98,6 +99,23 @@ public class Liaison {
         this.duree = duree;
 
     }
+
+    public Exploitant getType() {
+        return type;
+    }
+
+    public void setType(Exploitant type) {
+        this.type = type;
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked(boolean checked) {
+        this.checked = checked;
+    }
+
 
     @Override
     public String toString() {

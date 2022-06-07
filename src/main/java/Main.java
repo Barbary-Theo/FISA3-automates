@@ -18,7 +18,9 @@ public class Main {
 
 
         if (tramCheck && trainCheck && busCheck && metroCheck && interCheck) {
-            reseau.getCourtChemin("Gare", "0810", "Avlon");
+            var res = reseau.getCourtChemin("Limo", "1300", "Arly");
+            System.out.println("Voici le trajet le plus rapide pour vous : ");
+            res.forEach(System.out::println);
         }
 
     }

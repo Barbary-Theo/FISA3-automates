@@ -181,19 +181,19 @@ public class Reseau {
     ~~~~~~~~~~~~~~> " Plus court chemin part "
     */
 
+    private List<Liaison> currentPlusCourtChemin = new ArrayList<>();
+
     public List<Liaison> getCourtChemin(String startStationName, String startHourNotParsed, String endStationName) {
 
         if(parametersAreValid(startStationName, startHourNotParsed, endStationName)) {
 
             try {
 
-                for(Liaison liaison : liaisons.get(startStationName)) {
-                    System.out.println(liaison);
-                }
+                Map<String, List<Liaison>> copy = new HashMap<>(liaisons);
 
+               findPossibleTrajet(startStationName, startHourNotParsed, copy, endStationName, new ArrayList<Liaison>());
 
-                System.out.println(" -> correct parameters : Du bois, merci");
-                return new ArrayList<>();
+                return currentPlusCourtChemin;
 
             } catch (Exception e) {
                 throwException("Error -> hour can not be parsed in Integer");
@@ -203,6 +203,46 @@ public class Reseau {
 
         System.err.println("Error parameters -> station does not exist or hour not correctly defined, hour need to be like '0810' for 08h10.");
         return new ArrayList<>();
+    }
+
+    public void findPossibleTrajet(String stationName, String startHour, Map<String, List<Liaison>> map, String endStation, List<Liaison> trajet) {
+
+        if(stationName.equals(endStation)) {
+            var copyTrajet = new ArrayList<>(trajet);
+
+            if(currentPlusCourtChemin.size() > 0 && currentCheminInfToHourIndicated(copyTrajet.get(copyTrajet.size() - 1).getHeureArrive())) {
+                currentPlusCourtChemin = copyTrajet;
+            }
+        }
+        else {
+
+            try {
+
+                for(Liaison liaison : map.get(stationName)) {
+                    if(Integer.parseInt(liaison.getHeureDepart()) >= Integer.parseInt(startHour) && !liaison.isChecked() && (currentPlusCourtChemin.size() == 0 || currentCheminInfToHourIndicated(liaison.getHeureArrive()))
+                    ) {
+                        liaison.setChecked(true);
+                        trajet.add(liaison);
+                        trajet.forEach(System.out::println);
+
+                        findPossibleTrajet(liaison.getStationDestination().getName(), liaison.getHeureArrive(), map, endStation, trajet);
+                        trajet.remove(trajet.size() - 1);
+                        liaison.setChecked(false);
+                        System.out.println();
+                    }
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+
+
+    }
+
+    public boolean currentCheminInfToHourIndicated(String hour) {
+        return Integer.parseInt(hour) < Integer.parseInt(currentPlusCourtChemin.get(currentPlusCourtChemin.size() - 1).getHeureArrive());
     }
 
     public boolean parametersAreValid(String startStationName, String startHour, String endStationName) {
