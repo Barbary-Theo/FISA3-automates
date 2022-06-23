@@ -1,13 +1,16 @@
 package model;
 
+import reader.TextReader;
+
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Reseau {
 
     private static Reseau singleton;
-     /*
-     ~~~~~~~> Map < Nom de la station de départ , Liste des liaisons avec comme départ le nom de la station clé >
-     */
+    /*
+    ~~~~~~~> Map < Nom de la station de départ , Liste des liaisons avec comme départ le nom de la station clé >
+    */
     private Map<String, List<Liaison>> liaisons = new HashMap<>();
     /*
     ~~~~~~~> Map < Nom de la station , Station correspondante à la clé >
@@ -16,16 +19,16 @@ public class Reseau {
 
     private Reseau() {
         Station Limo = new Station("Limo", new ArrayList<>());
-        Station Arly = new Station("Arly",  new ArrayList<>());
-        Station Singha = new Station("Singha",  new ArrayList<>());
-        Station Neuville = new Station("Neuville",  new ArrayList<>());
-        Station Syen = new Station("Syen",  new ArrayList<>());
-        Station Gare = new Station("Gare",  new ArrayList<>());
-        Station Avlon = new Station("Avlon",  new ArrayList<>());
-        Station Mairie = new Station("Mairie",  new ArrayList<>());
-        Station Piscine = new Station("Piscine",  new ArrayList<>());
-        Station Ecole = new Station("Ecole",  new ArrayList<>());
-        Station Parc = new Station("Parc",  new ArrayList<>());
+        Station Arly = new Station("Arly", new ArrayList<>());
+        Station Singha = new Station("Singha", new ArrayList<>());
+        Station Neuville = new Station("Neuville", new ArrayList<>());
+        Station Syen = new Station("Syen", new ArrayList<>());
+        Station Gare = new Station("Gare", new ArrayList<>());
+        Station Avlon = new Station("Avlon", new ArrayList<>());
+        Station Mairie = new Station("Mairie", new ArrayList<>());
+        Station Piscine = new Station("Piscine", new ArrayList<>());
+        Station Ecole = new Station("Ecole", new ArrayList<>());
+        Station Parc = new Station("Parc", new ArrayList<>());
 
         Limo.addVoisin(Arly);
         Limo.addVoisin(Syen);
@@ -98,7 +101,7 @@ public class Reseau {
     }
 
     public static Reseau getInstance() {
-        if(singleton == null) {
+        if (singleton == null) {
             singleton = new Reseau();
             return singleton;
         }
@@ -107,15 +110,14 @@ public class Reseau {
 
 
     public void addLiaison(Liaison liaison) {
-        if(liaisons.containsKey(liaison.getStationDepart().getName())) {
-            var ele = liaisons.get(liaison.getStationDepart().getName());
+        if (liaisons.containsKey(liaison.getStationDepart().getName() + "-" + liaison.getStationDestination().getName())) {
+            var ele = liaisons.get(liaison.getStationDepart().getName() + "-" + liaison.getStationDestination().getName());
             ele.add(liaison);
-            liaisons.put(liaison.getStationDepart().getName(), ele);
-        }
-        else {
+            liaisons.put(liaison.getStationDepart().getName() + "-" + liaison.getStationDestination().getName(), ele);
+        } else {
             List<Liaison> ele = new ArrayList<>();
             ele.add(liaison);
-            liaisons.put(liaison.getStationDepart().getName(), ele);
+            liaisons.put(liaison.getStationDepart().getName() + "-" + liaison.getStationDestination().getName(), ele);
         }
     }
 
@@ -135,7 +137,7 @@ public class Reseau {
         return stations;
     }
 
-    public void setStations( Map<String, Station> stations) {
+    public void setStations(Map<String, Station> stations) {
         this.stations = stations;
     }
 
@@ -157,13 +159,13 @@ public class Reseau {
         int i = 0;
 
         String informations = "Stations : [\n";
-        for(Station station : stations.values()) {
+        for (Station station : stations.values()) {
             informations += "\t" + station.toString() + "\n";
         }
         informations += "]\n";
         informations += "Liaisons : [\n";
 
-        for(List<Liaison> liaisonList : liaisons.values()) {
+        for (List<Liaison> liaisonList : liaisons.values()) {
             for (Liaison liaison : liaisonList) {
                 informations += "\t" + liaison.toString() + "\n";
                 i++;
@@ -185,41 +187,30 @@ public class Reseau {
 
     public List<Liaison> getCourtChemin(String startStationName, String startHourNotParsed, String endStationName) {
 
-        if(parametersAreValid(startStationName, startHourNotParsed, endStationName)) {
-
-            try {
-
-                Map<String, List<Liaison>> copy = new HashMap<>(liaisons);
-
-               findPossibleTrajet(startStationName, startHourNotParsed, copy, endStationName, new ArrayList<Liaison>());
-
-                return currentPlusCourtChemin;
-
-            } catch (Exception e) {
-                throwException("Error -> hour can not be parsed in Integer");
-                return new ArrayList<>();
-            }
+        if (parametersAreValid(startStationName, startHourNotParsed, endStationName)) {
+                test(startStationName, endStationName, startHourNotParsed);
+        } else {
+            System.err.println("Error parameters -> station does not exist or hour not correctly defined, hour need to be like '0810' for 08h10.");
         }
 
-        System.err.println("Error parameters -> station does not exist or hour not correctly defined, hour need to be like '0810' for 08h10.");
         return new ArrayList<>();
     }
 
     public void findPossibleTrajet(String stationName, String startHour, Map<String, List<Liaison>> map, String endStation, List<Liaison> trajet) {
 
-        if(stationName.equals(endStation)) {
+        if (stationName.equals(endStation)) {
             var copyTrajet = new ArrayList<>(trajet);
 
-            if(currentPlusCourtChemin.size() > 0 && currentCheminInfToHourIndicated(copyTrajet.get(copyTrajet.size() - 1).getHeureArrive())) {
+            if (currentPlusCourtChemin.size() > 0 && currentCheminInfToHourIndicated(copyTrajet.get(copyTrajet.size() - 1).getHeureArrive())) {
                 currentPlusCourtChemin = copyTrajet;
             }
-        }
-        else {
+        } else {
 
             try {
 
-                for(Liaison liaison : map.get(stationName)) {
-                    if(Integer.parseInt(liaison.getHeureDepart()) >= Integer.parseInt(startHour) && !liaison.isChecked() && (currentPlusCourtChemin.size() == 0 || currentCheminInfToHourIndicated(liaison.getHeureArrive()))
+                for (Liaison liaison : map.get(stationName)) {
+                    if (Integer.parseInt(liaison.getHeureDepart()) >= Integer.parseInt(startHour) && !liaison.isChecked() &&
+                            (currentPlusCourtChemin.size() == 0 || currentCheminInfToHourIndicated(liaison.getHeureArrive()))
                     ) {
                         liaison.setChecked(true);
                         trajet.add(liaison);
@@ -254,7 +245,6 @@ public class Reseau {
     }
 
 
-
     public void throwException(String exceptionComment) {
         try {
             throw new Exception(exceptionComment);
@@ -262,5 +252,106 @@ public class Reseau {
             e.printStackTrace();
         }
     }
+
+
+    public void test(String startStation, String endStationName, String startHour) {
+
+        Station stationInit = stations.get(startStation);
+        List<String> listParcours = new ArrayList<>();
+        Map<String, Integer> distanceList = new HashMap<>();
+        Map<String, String> couleurList = new HashMap<>();
+        Map<String, String> predecesseurList = new HashMap<>();
+
+        stations.keySet().forEach(key -> {distanceList.put(key, -1); couleurList.put(key, "blanc"); predecesseurList.put(key, ""); });
+
+        listParcours.add(startStation);
+        distanceList.put(startStation, 0);
+        couleurList.put(startStation, "gris");
+        predecesseurList.put(startStation, "NULL");
+
+        while (!listParcours.isEmpty()) {
+            String sommetRemoved = listParcours.remove(0);
+
+            getPossibleVoisin(singleton.findStationByName(sommetRemoved), startHour).stream()
+                    .filter(voisin -> couleurList.get(voisin.getName()).equals("blanc")).toList()
+                    .forEach(whiteVoisin -> {
+                        couleurList.put(whiteVoisin.getName(), "gris");
+                        predecesseurList.put(whiteVoisin.getName(), sommetRemoved);
+                        Liaison bestLiaison = getBestLiaison(sommetRemoved, whiteVoisin.getName(), TextReader.setTripTime( Integer.parseInt(startHour), distanceList.get(sommetRemoved)) );
+                        distanceList.put(whiteVoisin.getName(), distanceList.get(sommetRemoved) + bestLiaison.getDuree());
+                        listParcours.add(whiteVoisin.getName());
+                        System.out.println(bestLiaison);
+
+                    });
+
+            couleurList.put(sommetRemoved, "noir");
+        }
+
+
+        // Récupérer le chemin
+        String val = predecesseurList.get(endStationName);
+        List<String> chemin = new ArrayList<>();
+        chemin.add(endStationName);
+        while(!val.equals("NULL")){
+            chemin.add(val);
+            val = predecesseurList.get(val);
+        }
+
+        // Affichage du chemin
+        System.out.print("Chemin à prendre : ");
+        for (int i = chemin.size() - 1; i >= 0; i--) {
+            System.out.print(chemin.get(i) + " - ");
+        }
+        System.out.println();
+        System.out.println();
+
+    }
+
+
+    public List<Station> getPossibleVoisin(Station station, String hour) {
+
+        List<Station> voisinsPossible = new ArrayList<>();
+
+        for(String key : liaisons.keySet()) {
+
+            if(key.startsWith(station.getName()) &&
+                liaisons.get(key).size() > 0) {
+
+                for(Liaison liaison : liaisons.get(key)) {
+                    if(Integer.parseInt(hour) <= Integer.parseInt(liaison.getHeureDepart()) && !voisinsPossible.contains(liaisons.get(key).get(0).getStationDestination())) {
+                        voisinsPossible.add(liaisons.get(key).get(0).getStationDestination());
+                    }
+                }
+            }
+
+        }
+
+
+        return voisinsPossible;
+    }
+
+
+    public Liaison getBestLiaison(String startStation, String endStation, String hour) {
+
+        int min = 0;
+        Liaison liaisonSelected = null;
+
+        if(liaisons.containsKey(startStation + "-" + endStation)) {
+
+            for(Liaison liaison : liaisons.get(startStation + "-" + endStation)) {
+
+                if (Integer.parseInt(hour) <= Integer.parseInt(liaison.getHeureDepart()) && (min == 0 || min > liaison.getDuree())) {
+                    min = liaison.getDuree();
+                    liaisonSelected = liaison;
+                }
+
+            }
+
+        }
+
+        return liaisonSelected;
+
+    }
+
 
 }
