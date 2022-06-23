@@ -15,6 +15,12 @@ public class Main {
         boolean trainCheck = XmlReader.readTrainXML("src/main/resources/train.xml", reseau);
         boolean tramCheck = XmlReader.readTramXML("src/main/resources/tram.xml", reseau);
         boolean metroCheck = TextReader.readMetroTEXT(new File("src/main/resources/metro.txt"), reseau);
+
+
+        if (tramCheck && trainCheck && busCheck && metroCheck && interCheck) {
+            var res = reseau.getCourtChemin("Limo", "1300", "Neuville");
+        }
+
     }
 }
 
