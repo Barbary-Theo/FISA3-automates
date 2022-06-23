@@ -67,7 +67,7 @@ public class TextReader {
 
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("The file is not in the expected format. Please correct it !");
         }
         return true;
     }
