@@ -18,7 +18,7 @@ public class Main {
 
 
         if (tramCheck && trainCheck && busCheck && metroCheck && interCheck) {
-            var res = reseau.getCourtChemin("Limo", "1300", "Neuville");
+            var res = reseau.getCourtChemin("Mairie", "1300", "Neuville");
         }
 
     }

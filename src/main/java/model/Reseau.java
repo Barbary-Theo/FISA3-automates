@@ -261,6 +261,7 @@ public class Reseau {
         Map<String, Integer> distanceList = new HashMap<>();
         Map<String, String> couleurList = new HashMap<>();
         Map<String, String> predecesseurList = new HashMap<>();
+        Map<String, Liaison> liaisonList = new HashMap<>();
 
         stations.keySet().forEach(key -> {distanceList.put(key, -1); couleurList.put(key, "blanc"); predecesseurList.put(key, ""); });
 
@@ -280,10 +281,10 @@ public class Reseau {
                         Liaison bestLiaison = getBestLiaison(sommetRemoved, whiteVoisin.getName(), TextReader.setTripTime( Integer.parseInt(startHour), distanceList.get(sommetRemoved)) );
                         distanceList.put(whiteVoisin.getName(), distanceList.get(sommetRemoved) + bestLiaison.getDuree());
                         listParcours.add(whiteVoisin.getName());
-                        System.out.println(bestLiaison);
-
+                        liaisonList.put(sommetRemoved + "-" + whiteVoisin.getName(), bestLiaison);
                     });
 
+            System.out.println(sommetRemoved);
             couleurList.put(sommetRemoved, "noir");
         }
 
@@ -298,9 +299,9 @@ public class Reseau {
         }
 
         // Affichage du chemin
-        System.out.print("Chemin à prendre : ");
-        for (int i = chemin.size() - 1; i >= 0; i--) {
-            System.out.print(chemin.get(i) + " - ");
+        System.out.print("\n\nChemin à prendre : \n");
+        for (int i = chemin.size() - 1; i >= 1; i--) {
+            System.out.println(liaisonList.get(chemin.get(i) + "-" + chemin.get(i - 1)));
         }
         System.out.println();
         System.out.println();
