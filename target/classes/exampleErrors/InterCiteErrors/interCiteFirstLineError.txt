@@ -1,4 +1,4 @@
-% Car Inter-Cité
+Car InterCite
 % tables horaires
 %
 % liste des liaisons :
@@ -7,7 +7,7 @@
 % liste d'horaires :
 % depart arrivee heure-depart
 %
-Limo		Syen
+Limo		Syen		35
 Syen		Singha		30
 Singha		Avlon		25
 Avlon		Neuville	17
