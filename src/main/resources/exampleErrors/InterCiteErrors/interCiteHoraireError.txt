@@ -4,10 +4,10 @@
 % liste des liaisons :
 % depart arrivee duree-trajet
 %
-% liste d'horaires :
+% liste des horaires des cars :
 % depart arrivee heure-depart
 %
-Limo		Syen
+Limo		Syen		35
 Syen		Singha		30
 Singha		Avlon		25
 Avlon		Neuville	17
