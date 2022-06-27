@@ -167,7 +167,7 @@ public class TextReader {
 
     public static boolean getAllCircuit(List<String[]> circuitStocke, List<String> allLines, int i, int j) {
 
-        while (allLines.get(j) != null && !allLines.get(j).equals("") && !allLines.get(j).contains("%")) {
+        while (j < allLines.size() && allLines.get(j) != null && !allLines.get(j).equals("") && !allLines.get(j).contains("%")) {
             String[] eleLine = allLines.get(j).split(" ");
 
             if (eleLine.length == 3) circuitStocke.add(eleLine);
@@ -290,6 +290,11 @@ public class TextReader {
         for(int i = allLines.size() -1   ; i >= 0 ; i--) {
             String line = allLines.get(i);
 
+            if(line.contains("% depart arrivee duree")) {
+                // dire qu'il existe au moins une ligne d'indiquée
+                info.put("line", 1.0);
+            }
+
             if(line.contains("% dernier départ à ")) {
                 String horaire = line.split("% dernier départ à ")[1];
                 try {
@@ -328,6 +333,10 @@ public class TextReader {
                     return false;
                 }
             }
+        }
+
+        if(!info.containsKey("line")) {
+            throwException("Error information -> There is any line indicated with key line '% depart arrivee duree' ");
         }
 
         if(!info.containsKey("each") || !info.containsKey("end") || !info.containsKey("intervalAprem") || !info.containsKey("arretStation")) {
