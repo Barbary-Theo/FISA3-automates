@@ -3,7 +3,6 @@ package model;
 import reader.TextReader;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class Reseau {
 
@@ -121,10 +120,6 @@ public class Reseau {
         }
     }
 
-    public void addStation(Station station) {
-        stations.put(station.getName(), station);
-    }
-
     public Map<String, List<Liaison>> getLiaisons() {
         return liaisons;
     }
@@ -147,10 +142,6 @@ public class Reseau {
 
     public Station findStationByName(String stationName) {
         return stations.get(stationName);
-    }
-
-    public List<Liaison> findLiaisonByStartStation(String stationName) {
-        return liaisons.get(stationName);
     }
 
     @Override
@@ -188,7 +179,7 @@ public class Reseau {
     public List<Liaison> getCourtChemin(String startStationName, String startHourNotParsed, String endStationName) {
 
         if (parametersAreValid(startStationName, startHourNotParsed, endStationName)) {
-                test(startStationName, endStationName, startHourNotParsed);
+                courtCheminIteration(startStationName, endStationName, startHourNotParsed);
         } else {
             System.err.println("Error parameters -> station does not exist or hour not correctly defined, hour need to be like '0810' for 08h10.");
         }
@@ -196,45 +187,6 @@ public class Reseau {
         return new ArrayList<>();
     }
 
-    public void findPossibleTrajet(String stationName, String startHour, Map<String, List<Liaison>> map, String endStation, List<Liaison> trajet) {
-
-        if (stationName.equals(endStation)) {
-            var copyTrajet = new ArrayList<>(trajet);
-
-            if (currentPlusCourtChemin.size() > 0 && currentCheminInfToHourIndicated(copyTrajet.get(copyTrajet.size() - 1).getHeureArrive())) {
-                currentPlusCourtChemin = copyTrajet;
-            }
-        } else {
-
-            try {
-
-                for (Liaison liaison : map.get(stationName)) {
-                    if (Integer.parseInt(liaison.getHeureDepart()) >= Integer.parseInt(startHour) && !liaison.isChecked() &&
-                            (currentPlusCourtChemin.size() == 0 || currentCheminInfToHourIndicated(liaison.getHeureArrive()))
-                    ) {
-                        liaison.setChecked(true);
-                        trajet.add(liaison);
-                        trajet.forEach(System.out::println);
-
-                        findPossibleTrajet(liaison.getStationDestination().getName(), liaison.getHeureArrive(), map, endStation, trajet);
-                        trajet.remove(trajet.size() - 1);
-                        liaison.setChecked(false);
-                        System.out.println();
-                    }
-                }
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
-
-
-    }
-
-    public boolean currentCheminInfToHourIndicated(String hour) {
-        return Integer.parseInt(hour) < Integer.parseInt(currentPlusCourtChemin.get(currentPlusCourtChemin.size() - 1).getHeureArrive());
-    }
 
     public boolean parametersAreValid(String startStationName, String startHour, String endStationName) {
 
@@ -245,16 +197,7 @@ public class Reseau {
     }
 
 
-    public void throwException(String exceptionComment) {
-        try {
-            throw new Exception(exceptionComment);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    public void test(String startStation, String endStationName, String startHour) {
+    public void courtCheminIteration(String startStation, String endStationName, String startHour) {
 
         Station stationInit = stations.get(startStation);
         List<String> listParcours = new ArrayList<>();

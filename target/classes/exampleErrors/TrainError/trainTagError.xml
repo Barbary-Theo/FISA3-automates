@@ -11,7 +11,7 @@
             <start-station>Limo</start-station>
             <arrival-station>Arly</arrival-station>
             <start-hour>1600</start-hour>
-            <arrival-hour>1615</arrival-hour>
+            <arrival-hour>a1615</arrival-hour>
         </junction>
         <junction>
             <start-station>Arly</start-station>

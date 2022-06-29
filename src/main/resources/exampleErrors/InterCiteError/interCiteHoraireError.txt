@@ -1,7 +1,7 @@
 % Car Inter-Cité
 % tables horaires
 %
-% liste des liaisons des cars :
+% liste des liaisons :
 % depart arrivee duree-trajet
 %
 % liste d'horaires :
@@ -17,7 +17,7 @@ Limo        Syen		0815
 Syen		Singha		0850
 Singha		Avlon		0920
 Avlon 		Neuville	0945
-Neuville	Gare		1002
+Neuville	Gare		100
 Gare		Neuville	1030
 Neuville	Avlon		1058
 Avlon		Singha		1115

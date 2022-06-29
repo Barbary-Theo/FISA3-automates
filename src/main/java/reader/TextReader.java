@@ -54,12 +54,20 @@ public class TextReader {
                             String debut = tableau[0];
                             String fin = tableau[1];
                             if (line.startsWith(debut) && line.contains(fin)) {
+                                if(temp[2].length() != 4) {
+                                    throwException("Error Format horaire -> horaire " + temp[2] + " does not respect format ^[0-9]{4}$");
+                                    return false;
+                                }
                                 reseau.addLiaison(new Liaison(setLiaisonName(debut, fin), temp[2], setTripTime(Integer.parseInt(temp[2]), Integer.parseInt(tableau[2])), Integer.parseInt(tableau[2]), new Exploitant("Car Inter-Cité"), reseau.findStationByName(temp[0]), reseau.findStationByName(temp[1])));
                             }
                             else if (line.startsWith(fin) && line.contains(debut)) {
+                                if(temp[2].length() != 4) {
+                                    throwException("Error Format horaire -> horaire " + temp[2] + " does not respect format ^[0-9]{4}$");
+                                    return false;
+                                }
                                 reseau.addLiaison(new Liaison(setLiaisonName(fin, debut), temp[2], setTripTime(Integer.parseInt(temp[2]), Integer.parseInt(tableau[2])), Integer.parseInt(tableau[2]), new Exploitant("Car Inter-Cité"), reseau.findStationByName(temp[0]), reseau.findStationByName(temp[1])));
-
                             }
+
                         }
                     }
                 }
